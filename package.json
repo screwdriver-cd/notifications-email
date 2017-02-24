@@ -1,0 +1,54 @@
+{
+  "name": "screwdriver-notifications-email",
+  "version": "0.0.1",
+  "description": "Sends email notifications on certain build events.",
+  "main": "index.js",
+  "scripts": {
+    "pretest": "eslint .",
+    "test": "jenkins-mocha --recursive",
+    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:screwdriver-cd/notifications-email.git"
+  },
+  "homepage": "https://github.com/screwdriver-cd/notifications-email",
+  "bugs": "https://github.com/screwdriver-cd/screwdriver/issues",
+  "keywords": [
+    "screwdriver",
+    "yahoo"
+  ],
+  "license": "BSD-3-Clause",
+  "author": "Jerry Zhang <thejerryzhang@gmail.com>",
+  "contributors": [
+    "Dao Lam <daolam112@gmail.com>",
+    "Darren Matsumoto <aeneascorrupt@gmail.com>",
+    "Jeremiah Wuenschel <jeremiah.wuenschel@gmail.com>",
+    "Jerry Zhang <thejerryzhang@gmail.com>",
+    "Min Zhang <minzhang@andrew.cmu.edu>",
+    "Peter Peterson <jedipetey@gmail.com>",
+    "Reetika Rastogi <r3rastogi@gmail.com",
+    "St. John Johnson <st.john.johnson@gmail.com",
+    "Tiffany Kyi <tiffanykyi@gmail.com>"
+  ],
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "eslint": "^3.9.1",
+    "eslint-config-screwdriver": "^2.0.9",
+    "jenkins-mocha": "^3.0.0",
+    "mockery": "^2.0.0",
+    "hapi": "^16.1.0",
+    "sinon": "^1.17.7",
+    "sinon-as-promised": "^4.0.2"
+  },
+  "dependencies": {
+    "joi": "^10.2.2",
+    "nodemailer": "^3.1.3"
+  },
+  "release": {
+    "debug": false,
+    "verifyConditions": {
+      "path": "./node_modules/semantic-release/src/lib/plugin-noop.js"
+    }
+  }
+}
