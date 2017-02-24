@@ -24,8 +24,10 @@
     "Dao Lam <daolam112@gmail.com>",
     "Darren Matsumoto <aeneascorrupt@gmail.com>",
     "Jeremiah Wuenschel <jeremiah.wuenschel@gmail.com>",
+    "Jerry Zhang <thejerryzhang@gmail.com>",
     "Min Zhang <minzhang@andrew.cmu.edu>",
     "Peter Peterson <jedipetey@gmail.com>",
+    "Reetika Rastogi <r3rastogi@gmail.com",
     "St. John Johnson <st.john.johnson@gmail.com",
     "Tiffany Kyi <tiffanykyi@gmail.com>"
   ],
@@ -35,7 +37,10 @@
     "eslint-config-screwdriver": "^2.0.9",
     "jenkins-mocha": "^3.0.0"
   },
-  "dependencies": {},
+  "dependencies": {
+    "joi": "^10.2.2",
+    "nodemailer": "^3.1.3"
+  },
   "release": {
     "debug": false,
     "verifyConditions": {
