@@ -34,13 +34,13 @@ The interface looks for email-specific build data:
 
 buildData.settings.email can take either:
 
-#### Simple Configuration:
+#### Simple Configuration
 
 ```js
 buildData.settings.email = 'notify.me@email.com'
 ```
 
-#### Advanced Configuration:
+#### Advanced Configuration
 
 ```js
 buildData.settings.email = {
