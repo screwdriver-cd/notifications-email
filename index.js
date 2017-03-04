@@ -2,13 +2,15 @@
 
 const Joi = require('joi');
 const emailer = require('./email');
+const tinytim = require('tinytim');
+const path = require('path');
 
-const DESCRIPTION_MAP = {
-    SUCCESS: 'Everything looks good!',
-    FAILURE: 'Did not work as expected.',
-    ABORTED: 'Aborted mid-flight',
-    RUNNING: 'Testing your code...',
-    QUEUED: 'Looking for a place to park...'
+const COLOR_MAP = {
+    SUCCESS: '3D9970',
+    FAILURE: 'FF4136',
+    ABORTED: '767676',
+    RUNNING: '7FDBFF',
+    QUEUED: 'FFDC00'
 };
 const DEFAULT_STATUSES = ['FAILURE'];
 // Joi Schema Validation
@@ -16,7 +18,7 @@ const SCHEMA_ADDRESS = Joi.string().email();
 const SCHEMA_ADDRESSES = Joi.array()
     .items(SCHEMA_ADDRESS)
     .min(0);
-const SCHEMA_STATUS = Joi.string().valid(Object.keys(DESCRIPTION_MAP));
+const SCHEMA_STATUS = Joi.string().valid(Object.keys(COLOR_MAP));
 const SCHEMA_STATUSES = Joi.array()
     .items(SCHEMA_STATUS)
     .min(0);
@@ -88,11 +90,16 @@ class EmailNotifier {
                     return resolve(null);
                 }
 
-                const subject = `Screwdriver Build ${buildData.pipelineName}` +
-                    `${buildData.jobName} ${buildData.buildId} ${buildData.status}`;
-                const message = `${DESCRIPTION_MAP[buildData.status]} \n${buildData.buildLink}`;
-                const html = `${DESCRIPTION_MAP[buildData.status]} </br>` +
-                    `<a href="${buildData.buildLink}">Link</a> to your build.`;
+                const subject = `${buildData.status} - Screwdriver ${buildData.pipelineName} ` +
+                    `${buildData.jobName} #${buildData.buildId}`;
+                const message = `Build status: ${buildData.status}` +
+                    `\nBuild link:${buildData.buildLink}`;
+                const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
+                    buildStatus: buildData.status,
+                    buildLink: buildData.buildLink,
+                    buildId: buildData.buildId,
+                    statusColor: COLOR_MAP[buildData.status]
+                });
 
                 const mailOpts = {
                     from: this.config.from,
