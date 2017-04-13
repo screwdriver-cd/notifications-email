@@ -21,6 +21,8 @@ function getNodemailerMock() {
 }
 
 describe('index', () => {
+    const eventMock = 'build_status_test';
+
     let serverMock;
     let configMock;
     let notifier;
@@ -71,20 +73,19 @@ describe('index', () => {
             notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
         });
 
-        it('verifies that included status creates nodemailer transporter', () => {
-            serverMock.event('build_status_test');
+        it('verifies that included status creates nodemailer transporter', (done) => {
+            serverMock.event(eventMock);
+            serverMock.on(eventMock, data => notifier.notify(data));
+            serverMock.emit(eventMock, buildDataMock);
 
-            const saveMe = notifier.notify().then(() => {
+            process.nextTick(() => {
                 assert.calledWith(nodemailerMock.createTransport,
                     { host: configMock.host, port: configMock.port });
+                done();
             });
-
-            serverMock.emit('build_status_test', buildDataMock);
-
-            return saveMe;
         });
 
-        it('verifies that non-included status returns null', () => {
+        it('verifies that non-included status returns null', (done) => {
             const buildDataMockUnincluded = {
                 settings: {
                     email: {
@@ -95,23 +96,17 @@ describe('index', () => {
                 status: 'invalid_status'
             };
 
-            serverMock.event('build_status_test');
+            serverMock.event(eventMock);
+            serverMock.on(eventMock, data => notifier.notify(data));
+            serverMock.emit(eventMock, buildDataMockUnincluded);
 
-            const saveMe = notifier.notify()
-            .then(() => {
-                assert.fail('Should not get here');
-            })
-            .catch((err) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.name, 'ValidationError');
+            process.nextTick(() => {
+                assert.notCalled(nodemailerMock.createTransport);
+                done();
             });
-
-            serverMock.emit('build_status_test', buildDataMockUnincluded);
-
-            return saveMe;
         });
 
-        it('verifies that non-subscribed status does not send a notifcation', () => {
+        it('verifies that non-subscribed status does not send a notifcation', (done) => {
             const buildDataMockUnincluded = {
                 settings: {
                     email: {
@@ -122,18 +117,17 @@ describe('index', () => {
                 status: 'ABORTED'
             };
 
-            serverMock.event('build_status_test');
+            serverMock.event(eventMock);
+            serverMock.on(eventMock, data => notifier.notify(data));
+            serverMock.emit(eventMock, buildDataMockUnincluded);
 
-            const saveMe = notifier.notify().then((res) => {
-                assert.equal(res, null);
+            process.nextTick(() => {
+                assert.notCalled(nodemailerMock.createTransport);
+                done();
             });
-
-            serverMock.emit('build_status_test', buildDataMockUnincluded);
-
-            return saveMe;
         });
 
-        it('sets addresses and statuses for simple email string config settings', () => {
+        it('sets addresses and statuses for simple email string config settings', (done) => {
             const buildDataMockSimple = {
                 settings: {
                     email: 'notify.me@email.com'
@@ -145,19 +139,18 @@ describe('index', () => {
                 buildLink: 'http://thisisaSDtest.com/builds/1234'
             };
 
-            serverMock.event('build_status_test');
+            serverMock.event(eventMock);
+            serverMock.on(eventMock, data => notifier.notify(data));
+            serverMock.emit(eventMock, buildDataMockSimple);
 
-            const saveMe = notifier.notify().then(() => {
+            process.nextTick(() => {
                 assert.calledWith(nodemailerMock.createTransport,
                     { host: configMock.host, port: configMock.port });
+                done();
             });
-
-            serverMock.emit('build_status_test', buildDataMockSimple);
-
-            return saveMe;
         });
 
-        it('sets addresses and statuses for an array of emails in config settings', () => {
+        it('sets addresses and statuses for an array of emails in config settings', (done) => {
             const buildDataMockArray = {
                 settings: {
                     email: ['notify.me@email.com', 'notify.you@email.com']
@@ -169,34 +162,32 @@ describe('index', () => {
                 buildLink: 'http://thisisaSDtest.com/builds/1234'
             };
 
-            serverMock.event('build_status_test');
+            serverMock.event(eventMock);
+            serverMock.on(eventMock, data => notifier.notify(data));
+            serverMock.emit(eventMock, buildDataMockArray);
 
-            const saveMe = notifier.notify().then(() => {
+            process.nextTick(() => {
                 assert.calledWith(nodemailerMock.createTransport,
                     { host: configMock.host, port: configMock.port });
+                done();
             });
-
-            serverMock.emit('build_status_test', buildDataMockArray);
-
-            return saveMe;
         });
 
-        it('allows additional notifications plugins in buildData.settings', () => {
+        it('allows additional notifications plugins in buildData.settings', (done) => {
             buildDataMock.settings.hipchat = {
                 awesome: 'sauce',
                 catch: 22
             };
 
-            serverMock.event('build_status_test');
+            serverMock.event(eventMock);
+            serverMock.on(eventMock, data => notifier.notify(data));
+            serverMock.emit(eventMock, buildDataMock);
 
-            const saveMe = notifier.notify().then(() => {
+            process.nextTick(() => {
                 assert.calledWith(nodemailerMock.createTransport,
                     { host: configMock.host, port: configMock.port });
+                done();
             });
-
-            serverMock.emit('build_status_test', buildDataMock);
-
-            return saveMe;
         });
     });
 
@@ -298,51 +289,41 @@ describe('index', () => {
             notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
         });
 
-        it('validates status', () => {
+        it('validates status', (done) => {
             buildDataMock.status = 22;
-            serverMock.event('build_status_test');
+            serverMock.event(eventMock);
+            serverMock.on(eventMock, data => notifier.notify(data));
+            serverMock.emit(eventMock, buildDataMock);
 
-            const saveMe = notifier.notify().then(() => {
-                assert.fail('should not get here');
-            }, (err) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.name, 'ValidationError');
+            process.nextTick(() => {
+                assert.notCalled(nodemailerMock.createTransport);
+                done();
             });
-
-            serverMock.emit('build_status_test', buildDataMock);
-
-            return saveMe;
         });
 
-        it('validates settings', () => {
+        it('validates settings', (done) => {
             buildDataMock.settings = ['hello@world.com', 'goodbye@universe.com'];
-            serverMock.event('build_status_test');
-            const saveMe = notifier.notify().then(() => {
-                assert.fail('should not get here');
-            }, (err) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.name, 'ValidationError');
+            serverMock.event(eventMock);
+            serverMock.on(eventMock, data => notifier.notify(data));
+            serverMock.emit(eventMock, buildDataMock);
+
+            process.nextTick(() => {
+                assert.notCalled(nodemailerMock.createTransport);
+                done();
             });
-
-            serverMock.emit('build_status_test', buildDataMock);
-
-            return saveMe;
         });
 
-        it('validates buildData format', () => {
+        it('validates buildData format', (done) => {
             const buildDataMockInvalid = ['this', 'is', 'wrong'];
 
-            serverMock.event('build_status_test');
-            const saveMe = notifier.notify().then(() => {
-                assert.fail('should not get here');
-            }, (err) => {
-                assert.instanceOf(err, Error);
-                assert.equal(err.name, 'ValidationError');
+            serverMock.event(eventMock);
+            serverMock.on(eventMock, data => notifier.notify(data));
+            serverMock.emit(eventMock, buildDataMockInvalid);
+
+            process.nextTick(() => {
+                assert.notCalled(nodemailerMock.createTransport);
+                done();
             });
-
-            serverMock.emit('build_status_test', buildDataMockInvalid);
-
-            return saveMe;
         });
     });
 });
