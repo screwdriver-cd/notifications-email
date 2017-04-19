@@ -70,46 +70,46 @@ class EmailNotifier extends NotificationBase {
         // Check buildData format against SCHEMA_BUILD_DATA
         try {
             Joi.attempt(buildData, SCHEMA_BUILD_DATA, 'Invalid build data format');
-            if (typeof buildData.settings.email === 'string' ||
-                Array.isArray(buildData.settings.email)) {
-                buildData.settings.email = {
-                    addresses: buildData.settings.email,
-                    statuses: DEFAULT_STATUSES
-                };
-            }
-
-            if (!buildData.settings.email.statuses.includes(buildData.status)) {
-                return;
-            }
-
-            const subject = `${buildData.status} - Screwdriver ${buildData.pipelineName} ` +
-                `${buildData.jobName} #${buildData.buildId}`;
-            const message = `Build status: ${buildData.status}` +
-                `\nBuild link:${buildData.buildLink}`;
-            const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
-                buildStatus: buildData.status,
-                buildLink: buildData.buildLink,
-                buildId: buildData.buildId,
-                statusColor: COLOR_MAP[buildData.status]
-            });
-
-            const mailOpts = {
-                from: this.config.from,
-                to: buildData.settings.email.addresses,
-                subject,
-                text: message,
-                html
-            };
-
-            const smtpConfig = {
-                host: this.config.host,
-                port: this.config.port
-            };
-
-            emailer(mailOpts, smtpConfig);
         } catch (e) {
-            // to not throw Error in event handler
+            return;
         }
+        if (typeof buildData.settings.email === 'string' ||
+            Array.isArray(buildData.settings.email)) {
+            buildData.settings.email = {
+                addresses: buildData.settings.email,
+                statuses: DEFAULT_STATUSES
+            };
+        }
+
+        if (!buildData.settings.email.statuses.includes(buildData.status)) {
+            return;
+        }
+
+        const subject = `${buildData.status} - Screwdriver ${buildData.pipelineName} ` +
+            `${buildData.jobName} #${buildData.buildId}`;
+        const message = `Build status: ${buildData.status}` +
+            `\nBuild link:${buildData.buildLink}`;
+        const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
+            buildStatus: buildData.status,
+            buildLink: buildData.buildLink,
+            buildId: buildData.buildId,
+            statusColor: COLOR_MAP[buildData.status]
+        });
+
+        const mailOpts = {
+            from: this.config.from,
+            to: buildData.settings.email.addresses,
+            subject,
+            text: message,
+            html
+        };
+
+        const smtpConfig = {
+            host: this.config.host,
+            port: this.config.port
+        };
+
+        emailer(mailOpts, smtpConfig);
     }
 }
 
