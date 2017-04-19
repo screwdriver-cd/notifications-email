@@ -60,11 +60,10 @@ class EmailNotifier extends NotificationBase {
     }
 
     /**
-    * Sets listener on server event of name 'eventName'
+    * Sets listener on server event of name 'eventName' in Screwdriver
     * Currently, event is triggered with a build status is updated
-    * @method notify
-    * @return {Promise} resolves to false if status is not in notification statuses
-    *                   resolves to emailer if status is in notification statuses
+    * @method _notify
+    * @param {Object} buildData - Build data emitted with some event from Screwdriver
     */
     _notify(buildData) {
         // Check buildData format against SCHEMA_BUILD_DATA
