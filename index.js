@@ -108,7 +108,8 @@ class EmailNotifier extends NotificationBase {
             port: this.config.port
         };
 
-        emailer(mailOpts, smtpConfig);
+        // eslint-disable-next-line no-new
+        new Promise(resolve => resolve(emailer(mailOpts, smtpConfig)));
     }
 }
 
