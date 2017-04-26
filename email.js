@@ -13,18 +13,14 @@ const nodemailer = require('nodemailer');
 * @param {object} smtpConfig              keys described below
 * @param {string} smtpConfig.host         smtp server host url
 * @param {number} smtpConfig.port         smtp host port (e.g. 25)
-* @return {Promise}                       resolves if email is sent
 */
 module.exports = (mailOpts, smtpConfig) => {
     const transporter = nodemailer.createTransport(smtpConfig);
 
-    return new Promise((resolve, reject) => {
-        transporter.sendMail(mailOpts, (error) => {
-            if (error) {
-                return reject(error);
-            }
-
-            return resolve();
-        });
+    transporter.sendMail(mailOpts, (error) => {
+        if (error) {
+            // eslint-disable-next-line no-console
+            console.error(error);
+        }
     });
 };
