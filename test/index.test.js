@@ -85,6 +85,30 @@ describe('index', () => {
             });
         });
 
+        it('creates a nodemailer with auth when password and username are provided', (done) => {
+            configMock.username = 'batman';
+            configMock.password = 'robin';
+
+            notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
+
+            serverMock.event(eventMock);
+            serverMock.on(eventMock, data => notifier.notify(data));
+            serverMock.emit(eventMock, buildDataMock);
+
+            process.nextTick(() => {
+                assert.calledWith(nodemailerMock.createTransport,
+                    {
+                        host: configMock.host,
+                        port: configMock.port,
+                        auth: {
+                            user: configMock.username,
+                            pass: configMock.password
+                        }
+                    });
+                done();
+            });
+        });
+
         it('verifies that non-included status returns null', (done) => {
             const buildDataMockUnincluded = {
                 settings: {
@@ -106,7 +130,7 @@ describe('index', () => {
             });
         });
 
-        it('verifies that non-subscribed status does not send a notifcation', (done) => {
+        it('verifies that non-subscribed status does not send a notification', (done) => {
             const buildDataMockUnincluded = {
                 settings: {
                     email: {
@@ -240,6 +264,28 @@ describe('index', () => {
 
         it('validates the from email', () => {
             configMock.from = 'nonEmailString';
+            try {
+                notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
+                assert.fail('should not get here');
+            } catch (err) {
+                assert.instanceOf(err, Error);
+                assert.equal(err.name, 'ValidationError');
+            }
+        });
+
+        it('validates the username', () => {
+            configMock.username = 22;
+            try {
+                notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
+                assert.fail('should not get here');
+            } catch (err) {
+                assert.instanceOf(err, Error);
+                assert.equal(err.name, 'ValidationError');
+            }
+        });
+
+        it('validates the password', () => {
+            configMock.password = 22;
             try {
                 notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
                 assert.fail('should not get here');
