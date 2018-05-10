@@ -18,6 +18,8 @@ The class has a variety of knobs to tweak when interacting with Email Notificati
 | config.host | String | SMTP Host URL |
 | config.port | Number | Port to use when connecting to SMTP |
 | config.from | String | Sender email address |
+| config.username | String | Optional username for SMTP |
+| config.password | String | Optional password for SMTP |
 
 The interface looks for email-specific build data:
 

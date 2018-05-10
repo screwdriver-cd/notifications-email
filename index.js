@@ -44,7 +44,9 @@ const SCHEMA_SMTP_CONFIG = Joi.object()
     .keys({
         host: Joi.string().required(),
         port: Joi.number().integer().required(),
-        from: SCHEMA_ADDRESS.required()
+        from: SCHEMA_ADDRESS.required(),
+        username: Joi.string(),
+        password: Joi.string()
     });
 
 class EmailNotifier extends NotificationBase {
@@ -107,6 +109,13 @@ class EmailNotifier extends NotificationBase {
             host: this.config.host,
             port: this.config.port
         };
+
+        if (this.config.username && this.config.password) {
+            smtpConfig.auth = {
+                user: this.config.username,
+                pass: this.config.password
+            };
+        }
 
         emailer(mailOpts, smtpConfig);
     }
