@@ -67,7 +67,7 @@ Code licensed under the BSD 3-Clause license. See LICENSE file for terms.
 [license-image]: https://img.shields.io/npm/l/screwdriver-notifications-email.svg
 [issues-image]: https://img.shields.io/github/issues/screwdriver-cd/notifications-email.svg
 [issues-url]: https://github.com/screwdriver-cd/notifications-email/issues
-[status-image]: https://cd.screwdriver.cd/pipelines/89/badge
-[status-url]: https://cd.screwdriver.cd/pipelines/89
+[status-image]: https://cd.screwdriver.cd/pipelines/787/badge
+[status-url]: https://cd.screwdriver.cd/pipelines/787
 [daviddm-image]: https://david-dm.org/screwdriver-cd/notifications-email.svg?theme=shields.io
 [daviddm-url]: https://david-dm.org/screwdriver-cd/notifications-email
