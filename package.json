@@ -35,7 +35,7 @@
     "chai": "^3.5.0",
     "eslint": "^3.9.1",
     "eslint-config-screwdriver": "^2.0.9",
-    "hapi": "^16.1.0",
+    "hapi": "^17.0.0",
     "jenkins-mocha": "^4.1.1",
     "mockery": "^2.0.0",
     "sinon": "^1.17.7"
