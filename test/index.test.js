@@ -75,8 +75,8 @@ describe('index', () => {
 
         it('verifies that included status creates nodemailer transporter', (done) => {
             serverMock.event(eventMock);
-            serverMock.on(eventMock, data => notifier.notify(data));
-            serverMock.emit(eventMock, buildDataMock);
+            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
                 assert.calledWith(nodemailerMock.createTransport,
@@ -92,8 +92,8 @@ describe('index', () => {
             notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
 
             serverMock.event(eventMock);
-            serverMock.on(eventMock, data => notifier.notify(data));
-            serverMock.emit(eventMock, buildDataMock);
+            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
                 assert.calledWith(nodemailerMock.createTransport,
@@ -121,8 +121,8 @@ describe('index', () => {
             };
 
             serverMock.event(eventMock);
-            serverMock.on(eventMock, data => notifier.notify(data));
-            serverMock.emit(eventMock, buildDataMockUnincluded);
+            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.emit(eventMock, buildDataMockUnincluded);
 
             process.nextTick(() => {
                 assert.notCalled(nodemailerMock.createTransport);
@@ -142,8 +142,8 @@ describe('index', () => {
             };
 
             serverMock.event(eventMock);
-            serverMock.on(eventMock, data => notifier.notify(data));
-            serverMock.emit(eventMock, buildDataMockUnincluded);
+            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.emit(eventMock, buildDataMockUnincluded);
 
             process.nextTick(() => {
                 assert.notCalled(nodemailerMock.createTransport);
@@ -164,8 +164,8 @@ describe('index', () => {
             };
 
             serverMock.event(eventMock);
-            serverMock.on(eventMock, data => notifier.notify(data));
-            serverMock.emit(eventMock, buildDataMockSimple);
+            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.emit(eventMock, buildDataMockSimple);
 
             process.nextTick(() => {
                 assert.calledWith(nodemailerMock.createTransport,
@@ -187,8 +187,8 @@ describe('index', () => {
             };
 
             serverMock.event(eventMock);
-            serverMock.on(eventMock, data => notifier.notify(data));
-            serverMock.emit(eventMock, buildDataMockArray);
+            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.emit(eventMock, buildDataMockArray);
 
             process.nextTick(() => {
                 assert.calledWith(nodemailerMock.createTransport,
@@ -204,8 +204,8 @@ describe('index', () => {
             };
 
             serverMock.event(eventMock);
-            serverMock.on(eventMock, data => notifier.notify(data));
-            serverMock.emit(eventMock, buildDataMock);
+            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
                 assert.calledWith(nodemailerMock.createTransport,
@@ -338,8 +338,8 @@ describe('index', () => {
         it('validates status', (done) => {
             buildDataMock.status = 22;
             serverMock.event(eventMock);
-            serverMock.on(eventMock, data => notifier.notify(data));
-            serverMock.emit(eventMock, buildDataMock);
+            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
                 assert.notCalled(nodemailerMock.createTransport);
@@ -350,8 +350,8 @@ describe('index', () => {
         it('validates settings', (done) => {
             buildDataMock.settings = ['hello@world.com', 'goodbye@universe.com'];
             serverMock.event(eventMock);
-            serverMock.on(eventMock, data => notifier.notify(data));
-            serverMock.emit(eventMock, buildDataMock);
+            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
                 assert.notCalled(nodemailerMock.createTransport);
@@ -363,8 +363,8 @@ describe('index', () => {
             const buildDataMockInvalid = ['this', 'is', 'wrong'];
 
             serverMock.event(eventMock);
-            serverMock.on(eventMock, data => notifier.notify(data));
-            serverMock.emit(eventMock, buildDataMockInvalid);
+            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.emit(eventMock, buildDataMockInvalid);
 
             process.nextTick(() => {
                 assert.notCalled(nodemailerMock.createTransport);
