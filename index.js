@@ -31,13 +31,20 @@ const SCHEMA_BUILD_SETTINGS = Joi.object()
     .keys({
         email: SCHEMA_EMAIL.required()
     }).unknown(true);
+const SCHEMA_PIPELINE_DATA = Joi.object()
+    .keys({
+        scmRepo: Joi.object().keys({ name: Joi.string() }).required()
+    }).unknown(true);
 const SCHEMA_BUILD_DATA = Joi.object()
     .keys({
         settings: SCHEMA_BUILD_SETTINGS.required(),
         status: SCHEMA_STATUS.required(),
-        pipelineName: Joi.string(),
+        pipeline: SCHEMA_PIPELINE_DATA.required(),
         jobName: Joi.string(),
-        buildId: Joi.number().integer(),
+        build: Joi.object().keys({
+            id: Joi.number().integer().required()
+        }).unknown(true),
+        event: Joi.object(),
         buildLink: Joi.string()
     });
 const SCHEMA_SMTP_CONFIG = Joi.object()
@@ -86,14 +93,14 @@ class EmailNotifier extends NotificationBase {
             return;
         }
 
-        const subject = `${buildData.status} - Screwdriver ${buildData.pipelineName} ` +
-            `${buildData.jobName} #${buildData.buildId}`;
+        const subject = `${buildData.status} - Screwdriver ${buildData.pipeline.scmRepo.name} ` +
+            `${buildData.jobName} #${buildData.build.id}`;
         const message = `Build status: ${buildData.status}` +
             `\nBuild link:${buildData.buildLink}`;
         const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
             buildStatus: buildData.status,
             buildLink: buildData.buildLink,
-            buildId: buildData.buildId,
+            buildId: buildData.build.id,
             statusColor: COLOR_MAP[buildData.status]
         });
 
