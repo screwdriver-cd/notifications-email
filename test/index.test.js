@@ -65,9 +65,23 @@ describe('index', () => {
                     }
                 },
                 status: 'SUCCESS',
-                pipelineName: 'screwdriver-cd/notifications',
+                pipeline: {
+                    id: '123',
+                    scmRepo: {
+                        name: 'screwdriver-cd/notifications'
+                    }
+                },
                 jobName: 'publish',
-                buildId: '1234',
+                build: { id: '1234' },
+                event: {
+                    id: '12345',
+                    causeMessage: 'Merge pull request #26 from screwdriver-cd/notifications',
+                    creator: { username: 'foo' },
+                    commit: {
+                        author: { name: 'foo' },
+                        message: 'fixing a bug'
+                    }
+                },
                 buildLink: 'http://thisisaSDtest.com/builds/1234'
             };
             notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
@@ -157,9 +171,21 @@ describe('index', () => {
                     email: 'notify.me@email.com'
                 },
                 status: 'FAILURE',
-                pipelineName: 'screwdriver-cd/notifications',
+                pipeline: {
+                    id: '123',
+                    scmRepo: { name: 'screwdriver-cd/notifications' }
+                },
                 jobName: 'publish',
-                buildId: '1234',
+                build: { id: '1234' },
+                event: {
+                    id: '12345',
+                    causeMessage: 'Merge pull request #26 from screwdriver-cd/notifications',
+                    creator: { username: 'foo' },
+                    commit: {
+                        author: { name: 'foo' },
+                        message: 'fixing a bug'
+                    }
+                },
                 buildLink: 'http://thisisaSDtest.com/builds/1234'
             };
 
@@ -180,9 +206,21 @@ describe('index', () => {
                     email: ['notify.me@email.com', 'notify.you@email.com']
                 },
                 status: 'FAILURE',
-                pipelineName: 'screwdriver-cd/notifications',
+                pipeline: {
+                    id: '123',
+                    scmRepo: { name: 'screwdriver-cd/notifications' }
+                },
                 jobName: 'publish',
-                buildId: '1234',
+                build: { id: '1234' },
+                event: {
+                    id: '12345',
+                    causeMessage: 'Merge pull request #26 from screwdriver-cd/notifications',
+                    creator: { username: 'foo' },
+                    commit: {
+                        author: { name: 'foo' },
+                        message: 'fixing a bug'
+                    }
+                },
                 buildLink: 'http://thisisaSDtest.com/builds/1234'
             };
 
@@ -233,9 +271,25 @@ describe('index', () => {
                     }
                 },
                 status: 'SUCCESS',
-                pipelineName: 'screwdriver-cd/notifications',
+                pipeline: {
+                    id: '123',
+                    scmRepo: {
+                        name: 'screwdriver-cd/notifications'
+                    }
+                },
                 jobName: 'publish',
-                buildId: '1234',
+                build: {
+                    id: '1234'
+                },
+                event: {
+                    id: '12345',
+                    causeMessage: 'Merge pull request #26 from screwdriver-cd/notifications',
+                    creator: { username: 'foo' },
+                    commit: {
+                        author: { name: 'foo' },
+                        message: 'fixing a bug'
+                    }
+                },
                 buildLink: 'http://thisisaSDtest.com/builds/1234'
             };
         });
@@ -326,9 +380,25 @@ describe('index', () => {
                     }
                 },
                 status: 'SUCCESS',
-                pipelineName: 'screwdriver-cd/notifications',
+                pipeline: {
+                    id: '123',
+                    scmRepo: {
+                        name: 'screwdriver-cd/notifications'
+                    }
+                },
                 jobName: 'publish',
-                buildId: '1234',
+                build: {
+                    id: '1234'
+                },
+                event: {
+                    id: '12345',
+                    causeMessage: 'Merge pull request #26 from screwdriver-cd/notifications',
+                    creator: { username: 'foo' },
+                    commit: {
+                        author: { name: 'foo' },
+                        message: 'fixing a bug'
+                    }
+                },
                 buildLink: 'http://thisisaSDtest.com/builds/1234'
             };
 
