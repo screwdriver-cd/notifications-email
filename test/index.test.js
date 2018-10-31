@@ -69,7 +69,7 @@ describe('index', () => {
                     id: '123',
                     scmRepo: {
                         name: 'screwdriver-cd/notifications',
-                        url: 'http://gittest/master'
+                        url: 'http://scmtest/master'
                     }
                 },
                 jobName: 'publish',
