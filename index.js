@@ -1,6 +1,7 @@
 'use strict';
 
 const NotificationBase = require('screwdriver-notifications-base');
+const Hoek = require('hoek');
 const Joi = require('joi');
 const emailer = require('./email');
 const tinytim = require('tinytim');
@@ -26,7 +27,7 @@ const SCHEMA_STATUSES = Joi.array()
 const SCHEMA_EMAIL = Joi.alternatives().try(
     Joi.object().keys({ addresses: SCHEMA_ADDRESSES, statuses: SCHEMA_STATUSES }),
     SCHEMA_ADDRESS, SCHEMA_ADDRESSES
-    );
+);
 const SCHEMA_BUILD_SETTINGS = Joi.object()
     .keys({
         email: SCHEMA_EMAIL.required()
@@ -85,20 +86,34 @@ class EmailNotifier extends NotificationBase {
         } catch (e) {
             return;
         }
-        if (typeof buildData.settings.email === 'string' ||
-            Array.isArray(buildData.settings.email)) {
+
+        const emailSettings = Hoek.reach(buildData, 'settings.email');
+
+        // Convert shorthand config to object
+        // ie: 'email: [test@email.com, test2@email.com]' or 'email: test@email.com'
+        if (typeof emailSettings === 'string' || Array.isArray(emailSettings)) {
             buildData.settings.email = {
-                addresses: buildData.settings.email,
-                statuses: DEFAULT_STATUSES
+                addresses: emailSettings
             };
         }
 
-        if (!buildData.settings.email.statuses.includes(buildData.status)) {
+        // Make sure statuses are set
+        const defaultSettings = {
+            statuses: DEFAULT_STATUSES
+        };
+
+        buildData.settings.email = Object.assign(defaultSettings, buildData.settings.email);
+
+        const statuses = Hoek.reach(buildData, 'settings.email.statuses');
+
+        // Short circuit if status does not match
+        if (!statuses.includes(buildData.status)) {
             return;
         }
 
-        const subject = `${buildData.status} - Screwdriver ${buildData.pipeline.scmRepo.name} ` +
-            `${buildData.jobName} #${buildData.build.id}`;
+        const subject = `${buildData.status} - Screwdriver ` +
+            `${Hoek.reach(buildData, 'pipeline.scmRepo.name')} ` +
+            `${buildData.jobName} #${Hoek.reach(buildData, 'build.id')}`;
         const message = `Build status: ${buildData.status}` +
             `\nBuild link:${buildData.buildLink}`;
         const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
@@ -110,7 +125,7 @@ class EmailNotifier extends NotificationBase {
 
         const mailOpts = {
             from: this.config.from,
-            to: buildData.settings.email.addresses,
+            to: Hoek.reach(buildData, 'settings.email.addresses'),
             subject,
             text: message,
             html
