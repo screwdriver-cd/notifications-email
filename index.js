@@ -19,11 +19,11 @@ const DEFAULT_STATUSES = ['FAILURE'];
 const SCHEMA_ADDRESS = Joi.string().email();
 const SCHEMA_ADDRESSES = Joi.array()
     .items(SCHEMA_ADDRESS)
-    .min(0);
+    .min(1);
 const SCHEMA_STATUS = Joi.string().valid(Object.keys(COLOR_MAP));
 const SCHEMA_STATUSES = Joi.array()
     .items(SCHEMA_STATUS)
-    .min(0);
+    .min(1);
 const SCHEMA_EMAIL = Joi.alternatives().try(
     Joi.object().keys({ addresses: SCHEMA_ADDRESSES, statuses: SCHEMA_STATUSES }),
     SCHEMA_ADDRESS, SCHEMA_ADDRESSES
