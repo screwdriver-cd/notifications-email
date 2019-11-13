@@ -73,7 +73,20 @@ describe('index', () => {
                     }
                 },
                 jobName: 'publish',
-                build: { id: '1234' },
+                build: {
+                    id: '1234',
+                    meta: {
+                        build: {
+                            sha: '123abc'
+                        },
+                        commit: {
+                            changedFiles: 'foo.txt,bar,txt',
+                            message: 'update something',
+                            url: `https://ghe.corp.dummy/screwdriver-cd/
+                                notifications/commit/85b159c5457441c9bc9ff1bc9944f4f6bbd1ff89`
+                        }
+                    }
+                },
                 event: {
                     id: '12345',
                     causeMessage: 'Merge pull request #26 from screwdriver-cd/notifications',
@@ -177,7 +190,20 @@ describe('index', () => {
                     scmRepo: { name: 'screwdriver-cd/notifications' }
                 },
                 jobName: 'publish',
-                build: { id: '1234' },
+                build: {
+                    id: '1234',
+                    meta: {
+                        build: {
+                            sha: '123abc'
+                        },
+                        commit: {
+                            changedFiles: 'foo.txt,bar,txt',
+                            message: 'update something',
+                            url: `https://ghe.corp.dummy/screwdriver-cd/
+                                notifications/commit/85b159c5457441c9bc9ff1bc9944f4f6bbd1ff89`
+                        }
+                    }
+                },
                 event: {
                     id: '12345',
                     causeMessage: 'Merge pull request #26 from screwdriver-cd/notifications',
@@ -212,7 +238,20 @@ describe('index', () => {
                     scmRepo: { name: 'screwdriver-cd/notifications' }
                 },
                 jobName: 'publish',
-                build: { id: '1234' },
+                build: {
+                    id: '1234',
+                    meta: {
+                        build: {
+                            sha: '123abc'
+                        },
+                        commit: {
+                            changedFiles: 'foo.txt,bar,txt',
+                            message: 'update something',
+                            url: `https://ghe.corp.dummy/screwdriver-cd/
+                                notifications/commit/85b159c5457441c9bc9ff1bc9944f4f6bbd1ff89`
+                        }
+                    }
+                },
                 event: {
                     id: '12345',
                     causeMessage: 'Merge pull request #26 from screwdriver-cd/notifications',
