@@ -121,6 +121,8 @@ class EmailNotifier extends NotificationBase {
 
                 changedFilesStr += tinytim.tim(li, { contents: file });
             });
+        } else {
+            changedFilesStr = 'There is no changed files.';
         }
 
         const ul = '<ul>{{list}}</ul>';
