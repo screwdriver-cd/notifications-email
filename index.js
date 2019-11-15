@@ -111,15 +111,40 @@ class EmailNotifier extends NotificationBase {
             return;
         }
 
+        const changedFiles = Hoek.reach(buildData, 'build.meta.commit.changedFiles').split(',');
+
+        let changedFilesStr = '';
+
+        if (changedFiles.length > 0 && changedFiles[0] !== '') {
+            changedFiles.forEach((file) => {
+                const li = '<li>{{contents}}</li>';
+
+                changedFilesStr += tinytim.tim(li, { contents: file });
+            });
+        } else {
+            changedFilesStr = 'There are no changed files.';
+        }
+
+        const ul = '<ul>{{list}}</ul>';
+
+        changedFilesStr = tinytim.tim(ul, { list: changedFilesStr });
+
         const subject = `${buildData.status} - Screwdriver ` +
             `${Hoek.reach(buildData, 'pipeline.scmRepo.name')} ` +
             `${buildData.jobName} #${Hoek.reach(buildData, 'build.id')}`;
         const message = `Build status: ${buildData.status}` +
             `\nBuild link:${buildData.buildLink}`;
+        const commitSha = Hoek.reach(buildData, 'build.meta.build.sha').slice(0, 7);
+        const commitMessage = Hoek.reach(buildData, 'build.meta.commit.message');
+        const commitLink = Hoek.reach(buildData, 'build.meta.commit.url');
         const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
             buildStatus: buildData.status,
             buildLink: buildData.buildLink,
             buildId: buildData.build.id,
+            changedFiles: changedFilesStr,
+            commitSha,
+            commitMessage,
+            commitLink,
             statusColor: COLOR_MAP[buildData.status]
         });
 
