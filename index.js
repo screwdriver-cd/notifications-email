@@ -12,9 +12,9 @@ const path = require('path');
 const COLOR_MAP = {
     ABORTED: '767676',
     CREATED: '0B548C',
-    FAILURE: 'FF4000',    
+    FAILURE: 'FF4000',
     QUEUED: '669999',
-    RUNNING: '0F69FF',    
+    RUNNING: '0F69FF',
     SUCCESS: '00CC00',
     BLOCKED: 'CCC',
     UNSTABLE: 'FFD333',
