@@ -7,12 +7,19 @@ const emailer = require('./email');
 const tinytim = require('tinytim');
 const path = require('path');
 
+// See also COLOR_MAP in Slack Notification.
+// https://github.com/screwdriver-cd/notifications-slack/blob/master/index.js#L10
 const COLOR_MAP = {
-    SUCCESS: '3D9970',
-    FAILURE: 'FF4136',
     ABORTED: '767676',
-    RUNNING: '7FDBFF',
-    QUEUED: 'FFDC00'
+    CREATED: '0B548C',
+    FAILURE: 'FF4000',
+    QUEUED: '669999',
+    RUNNING: '0F69FF',
+    SUCCESS: '00CC00',
+    BLOCKED: 'CCC',
+    UNSTABLE: 'FFD333',
+    COLLAPSED: 'F2F2F2',
+    FROZEN: 'ACD9FF'
 };
 const DEFAULT_STATUSES = ['FAILURE'];
 // Joi Schema Validation
