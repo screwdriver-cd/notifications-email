@@ -7,7 +7,7 @@ const emailer = require('./email');
 const tinytim = require('tinytim');
 const path = require('path');
 
-// See also COLOR_MAP in Slack Notification. 
+// See also COLOR_MAP in Slack Notification.
 // https://github.com/screwdriver-cd/notifications-slack/blob/master/index.js#L10
 const COLOR_MAP = {
     ABORTED: '767676',
