@@ -68,6 +68,10 @@ const SCHEMA_SMTP_CONFIG = Joi.object()
         password: Joi.string()
     });
 
+const validateConfigEmail = (config) => {
+    return Joi.validate(config, SCHEMA_EMAIL);
+};
+
 class EmailNotifier extends NotificationBase {
     /**
     * Constructs an EmailNotifier
@@ -179,4 +183,8 @@ class EmailNotifier extends NotificationBase {
     }
 }
 
-module.exports = EmailNotifier;
+module.exports = {
+    EmailNotifier: EmailNotifier,
+    validateConfigEmail: validateConfigEmail
+};
+
