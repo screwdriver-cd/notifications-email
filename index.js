@@ -177,6 +177,11 @@ class EmailNotifier extends NotificationBase {
 
         emailer(mailOpts, smtpConfig);
     }
+
+    // Validate the settings email object
+    static validateConfig(config) {
+        return Joi.validate(config, SCHEMA_EMAIL);
+    }
 }
 
 module.exports = EmailNotifier;
