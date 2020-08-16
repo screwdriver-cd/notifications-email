@@ -19,6 +19,7 @@ const COLOR_MAP = {
     BLOCKED: 'CCC',
     UNSTABLE: 'FFD333',
     COLLAPSED: 'F2F2F2',
+    FIXED: '00CC00',
     FROZEN: 'ACD9FF'
 };
 const DEFAULT_STATUSES = ['FAILURE'];
@@ -112,6 +113,10 @@ class EmailNotifier extends NotificationBase {
         buildData.settings.email = Object.assign(defaultSettings, buildData.settings.email);
 
         const statuses = Hoek.reach(buildData, 'settings.email.statuses');
+
+        if (buildData.status === 'FIXED') {
+            statuses.push(buildData.status);
+        }
 
         // Short circuit if status does not match
         if (!statuses.includes(buildData.status)) {
