@@ -58,7 +58,8 @@ const SCHEMA_BUILD_DATA = Joi.object()
             id: Joi.number().integer().required()
         }).unknown(true),
         event: Joi.object(),
-        buildLink: Joi.string()
+        buildLink: Joi.string(),
+        isFixed: Joi.boolean()
     });
 const SCHEMA_SMTP_CONFIG = Joi.object()
     .keys({
@@ -114,13 +115,13 @@ class EmailNotifier extends NotificationBase {
 
         const statuses = Hoek.reach(buildData, 'settings.email.statuses');
 
-        if (buildData.status === 'FIXED') {
-            statuses.push(buildData.status);
-        }
-
         // Short circuit if status does not match
         if (!statuses.includes(buildData.status)) {
             return;
+        }
+
+        if (buildData.status === 'SUCCESS' && buildData.isFixed) {
+            buildData.status = 'FIXED';
         }
 
         const changedFiles = Hoek.reach(buildData, 'build.meta.commit.changedFiles').split(',');
