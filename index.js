@@ -124,6 +124,7 @@ class EmailNotifier extends NotificationBase {
             return;
         }
 
+        // When using multiple notification plugins,Do not change the `buildData.status` directly 
         let notificationStatus = buildData.status;
 
         if (statuses.includes('FAILURE')) {
