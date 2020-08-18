@@ -115,13 +115,21 @@ class EmailNotifier extends NotificationBase {
 
         const statuses = Hoek.reach(buildData, 'settings.email.statuses');
 
+        // Add for fixed notification
+        if (!statuses.includes('SUCCESS') && buildData.isFixed) {
+            statuses.push('SUCCESS');
+        }
         // Short circuit if status does not match
         if (!statuses.includes(buildData.status)) {
             return;
         }
 
-        if (buildData.status === 'SUCCESS' && buildData.isFixed) {
-            buildData.status = 'FIXED';
+        let notificationStatus = buildData.status;
+
+        if (statuses.includes('FAILURE')) {
+            if (buildData.status === 'SUCCESS' && buildData.isFixed) {
+                notificationStatus = 'FIXED';
+            }
         }
 
         const changedFiles = Hoek.reach(buildData, 'build.meta.commit.changedFiles').split(',');
@@ -142,16 +150,16 @@ class EmailNotifier extends NotificationBase {
 
         changedFilesStr = tinytim.tim(ul, { list: changedFilesStr });
 
-        const subject = `${buildData.status} - Screwdriver ` +
+        const subject = `${notificationStatus} - Screwdriver ` +
             `${Hoek.reach(buildData, 'pipeline.scmRepo.name')} ` +
             `${buildData.jobName} #${Hoek.reach(buildData, 'build.id')}`;
-        const message = `Build status: ${buildData.status}` +
+        const message = `Build status: ${notificationStatus}` +
             `\nBuild link:${buildData.buildLink}`;
         const commitSha = Hoek.reach(buildData, 'build.meta.build.sha').slice(0, 7);
         const commitMessage = Hoek.reach(buildData, 'build.meta.commit.message');
         const commitLink = Hoek.reach(buildData, 'build.meta.commit.url');
         const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
-            buildStatus: buildData.status,
+            buildStatus: notificationStatus,
             buildLink: buildData.buildLink,
             buildId: buildData.build.id,
             changedFiles: changedFilesStr,
