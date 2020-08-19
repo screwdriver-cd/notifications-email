@@ -116,21 +116,22 @@ class EmailNotifier extends NotificationBase {
         const statuses = Hoek.reach(buildData, 'settings.email.statuses');
 
         // Add for fixed notification
-        if (!statuses.includes('SUCCESS') && buildData.isFixed) {
-            statuses.push('SUCCESS');
-        }
-        // Short circuit if status does not match
-        if (!statuses.includes(buildData.status)) {
-            return;
+        if (buildData.isFixed) {
+            statuses.push('FIXED');
         }
 
-        // When using multiple notification plugins,Do not change the `buildData.status` directly
+        // Do not change the `buildData.status` directly.
+        // It affects the behavior of other notification plugins.
         let notificationStatus = buildData.status;
 
         if (statuses.includes('FAILURE')) {
             if (buildData.status === 'SUCCESS' && buildData.isFixed) {
                 notificationStatus = 'FIXED';
             }
+        }
+        // Short circuit if status does not match
+        if (!statuses.includes(notificationStatus)) {
+            return;
         }
 
         const changedFiles = Hoek.reach(buildData, 'build.meta.commit.changedFiles').split(',');
