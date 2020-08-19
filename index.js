@@ -125,7 +125,7 @@ class EmailNotifier extends NotificationBase {
         let notificationStatus = buildData.status;
 
         if (statuses.includes('FAILURE')) {
-            if (buildData.status === 'SUCCESS' && buildData.isFixed) {
+            if (notificationStatus === 'SUCCESS' && buildData.isFixed) {
                 notificationStatus = 'FIXED';
             }
         }
