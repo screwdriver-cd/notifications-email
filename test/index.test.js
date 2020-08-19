@@ -96,7 +96,8 @@ describe('index', () => {
                         message: 'fixing a bug'
                     }
                 },
-                buildLink: 'http://thisisaSDtest.com/builds/1234'
+                buildLink: 'http://thisisaSDtest.com/builds/1234',
+                isFixed: false
             };
             notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
         });
@@ -105,6 +106,19 @@ describe('index', () => {
             serverMock.event(eventMock);
             serverMock.events.on(eventMock, data => notifier.notify(data));
             serverMock.events.emit(eventMock, buildDataMock);
+
+            process.nextTick(() => {
+                assert.calledWith(nodemailerMock.createTransport,
+                    { host: configMock.host, port: configMock.port });
+                done();
+            });
+        });
+
+        it('when the build status is fixed, Overwrites the notification status title', (done) => {
+            serverMock.event(eventMock);
+            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.emit(eventMock, buildDataMock);
+            buildDataMock.isFixed = true;
 
             process.nextTick(() => {
                 assert.calledWith(nodemailerMock.createTransport,

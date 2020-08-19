@@ -19,6 +19,7 @@ const COLOR_MAP = {
     BLOCKED: 'CCC',
     UNSTABLE: 'FFD333',
     COLLAPSED: 'F2F2F2',
+    FIXED: '00CC00',
     FROZEN: 'ACD9FF'
 };
 const DEFAULT_STATUSES = ['FAILURE'];
@@ -57,7 +58,8 @@ const SCHEMA_BUILD_DATA = Joi.object()
             id: Joi.number().integer().required()
         }).unknown(true),
         event: Joi.object(),
-        buildLink: Joi.string()
+        buildLink: Joi.string(),
+        isFixed: Joi.boolean()
     });
 const SCHEMA_SMTP_CONFIG = Joi.object()
     .keys({
@@ -113,8 +115,22 @@ class EmailNotifier extends NotificationBase {
 
         const statuses = Hoek.reach(buildData, 'settings.email.statuses');
 
+        // Add for fixed notification
+        if (buildData.isFixed) {
+            statuses.push('FIXED');
+        }
+
+        // Do not change the `buildData.status` directly
+        // It affects the behavior of other notification plugins
+        let notificationStatus = buildData.status;
+
+        if (statuses.includes('FAILURE')) {
+            if (notificationStatus === 'SUCCESS' && buildData.isFixed) {
+                notificationStatus = 'FIXED';
+            }
+        }
         // Short circuit if status does not match
-        if (!statuses.includes(buildData.status)) {
+        if (!statuses.includes(notificationStatus)) {
             return;
         }
 
@@ -136,16 +152,16 @@ class EmailNotifier extends NotificationBase {
 
         changedFilesStr = tinytim.tim(ul, { list: changedFilesStr });
 
-        const subject = `${buildData.status} - Screwdriver ` +
+        const subject = `${notificationStatus} - Screwdriver ` +
             `${Hoek.reach(buildData, 'pipeline.scmRepo.name')} ` +
             `${buildData.jobName} #${Hoek.reach(buildData, 'build.id')}`;
-        const message = `Build status: ${buildData.status}` +
+        const message = `Build status: ${notificationStatus}` +
             `\nBuild link:${buildData.buildLink}`;
         const commitSha = Hoek.reach(buildData, 'build.meta.build.sha').slice(0, 7);
         const commitMessage = Hoek.reach(buildData, 'build.meta.commit.message');
         const commitLink = Hoek.reach(buildData, 'build.meta.commit.url');
         const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
-            buildStatus: buildData.status,
+            buildStatus: notificationStatus,
             buildLink: buildData.buildLink,
             buildId: buildData.build.id,
             changedFiles: changedFilesStr,
