@@ -1,7 +1,7 @@
 'use strict';
 
 const NotificationBase = require('screwdriver-notifications-base');
-const Hoek = require('hoek');
+const Hoek = require('@hapi/hoek');
 const Joi = require('joi');
 const emailer = require('./email');
 const tinytim = require('tinytim');
@@ -28,7 +28,7 @@ const SCHEMA_ADDRESS = Joi.string().email();
 const SCHEMA_ADDRESSES = Joi.array()
     .items(SCHEMA_ADDRESS)
     .min(1);
-const SCHEMA_STATUS = Joi.string().valid(Object.keys(COLOR_MAP));
+const SCHEMA_STATUS = Joi.string().valid(...Object.keys(COLOR_MAP));
 const SCHEMA_STATUSES = Joi.array()
     .items(SCHEMA_STATUS)
     .min(1);
