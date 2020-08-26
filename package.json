@@ -1,11 +1,11 @@
 {
   "name": "screwdriver-notifications-email",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Sends email notifications on certain build events.",
   "main": "index.js",
   "scripts": {
     "pretest": "eslint .",
-    "test": "jenkins-mocha --recursive",
+    "test": "mocha --recursive",
     "semantic-release": "semantic-release pre && npm publish && semantic-release post"
   },
   "repository": {
@@ -32,17 +32,17 @@
     "Tiffany Kyi <tiffanykyi@gmail.com>"
   ],
   "devDependencies": {
+    "@hapi/hapi": "^20.0.0",
     "chai": "^3.5.0",
     "eslint": "^4.19.1",
     "eslint-config-screwdriver": "^3.0.1",
-    "@hapi/hapi": "^17.8.5",
-    "jenkins-mocha": "^8.0.0",
+    "mocha": "^8.1.2",
     "mockery": "^2.0.0",
     "sinon": "^7.4.2"
   },
   "dependencies": {
-    "hoek": "^6.1.3",
-    "joi": "^10.2.2",
+    "@hapi/hoek": "^9.0.4",
+    "joi": "^17.2.1",
     "nodemailer": "^4.7.0",
     "screwdriver-notifications-base": "^3.0.2",
     "tinytim": "^0.1.1"
