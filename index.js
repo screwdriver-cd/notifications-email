@@ -161,7 +161,8 @@ class EmailNotifier extends NotificationBase {
         const commitMessage = Hoek.reach(buildData, 'build.meta.commit.message');
         const commitLink = Hoek.reach(buildData, 'build.meta.commit.url');
         const rootDir = Hoek.reach(buildData, 'pipeline.scmRepo.rootDir', { default: false });
-        const rootDirMsg = rootDir ? tinytim.tim('<p><b>Source Directory:</b>{{rootDir}}</p>', { rootDir }) : '';
+        const rootDirTmp = '<p><b>Source Directory:</b>{{rootDir}}</p>';
+        const rootDirMsg = rootDir ? tinytim.tim(rootDirTmp, { rootDir }) : '';
         const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
             buildStatus: notificationStatus,
             buildLink: buildData.buildLink,
