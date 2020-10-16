@@ -152,17 +152,15 @@ class EmailNotifier extends NotificationBase {
 
         changedFilesStr = tinytim.tim(ul, { list: changedFilesStr });
 
+        const rootDir = Hoek.reach(buildData, 'pipeline.scmRepo.rootDir', { default: ''});
         const subject = `${notificationStatus} - Screwdriver ` +
             `${Hoek.reach(buildData, 'pipeline.scmRepo.name')} ` +
-            `${buildData.jobName} #${Hoek.reach(buildData, 'build.id')}`;
+            `${buildData.jobName} ${rootDir} #${Hoek.reach(buildData, 'build.id')}`;
         const message = `Build status: ${notificationStatus}` +
             `\nBuild link:${buildData.buildLink}`;
         const commitSha = Hoek.reach(buildData, 'build.meta.build.sha').slice(0, 7);
         const commitMessage = Hoek.reach(buildData, 'build.meta.commit.message');
         const commitLink = Hoek.reach(buildData, 'build.meta.commit.url');
-        const rootDir = Hoek.reach(buildData, 'pipeline.scmRepo.rootDir', { default: false });
-        const rootDirTmp = '<p><b>Source Directory:</b>{{rootDir}}</p>';
-        const rootDirMsg = rootDir ? tinytim.tim(rootDirTmp, { rootDir }) : '';
         const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
             buildStatus: notificationStatus,
             buildLink: buildData.buildLink,
@@ -171,7 +169,6 @@ class EmailNotifier extends NotificationBase {
             commitSha,
             commitMessage,
             commitLink,
-            rootDirMsg,
             statusColor: COLOR_MAP[buildData.status]
         });
 
