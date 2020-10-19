@@ -290,6 +290,55 @@ describe('index', () => {
             });
         });
 
+        it('sets addresses, statuses and srcDir for simple email string config', (done) => {
+            const buildDataMockSimple = {
+                settings: {
+                    email: 'notify.me@email.com'
+                },
+                status: 'FAILURE',
+                pipeline: {
+                    id: '123',
+                    scmRepo: { name: 'screwdriver-cd/notifications' },
+                    rootDir: 'mydir'
+                },
+                jobName: 'publish',
+                build: {
+                    id: '1234',
+                    meta: {
+                        build: {
+                            sha: '123abc'
+                        },
+                        commit: {
+                            changedFiles: 'foo.txt,bar,txt',
+                            message: 'update something',
+                            url: `https://ghe.corp.dummy/screwdriver-cd/
+                                notifications/commit/85b159c5457441c9bc9ff1bc9944f4f6bbd1ff89`
+                        }
+                    }
+                },
+                event: {
+                    id: '12345',
+                    causeMessage: 'Merge pull request #26 from screwdriver-cd/notifications',
+                    creator: { username: 'foo' },
+                    commit: {
+                        author: { name: 'foo' },
+                        message: 'fixing a bug'
+                    }
+                },
+                buildLink: 'http://thisisaSDtest.com/builds/1234'
+            };
+
+            serverMock.event(eventMock);
+            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.emit(eventMock, buildDataMockSimple);
+
+            process.nextTick(() => {
+                assert.calledWith(nodemailerMock.createTransport,
+                    { host: configMock.host, port: configMock.port });
+                done();
+            });
+        });
+
         it('sets addresses and statuses for an array of emails in config settings', (done) => {
             const buildDataMockArray = {
                 settings: {

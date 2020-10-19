@@ -152,9 +152,10 @@ class EmailNotifier extends NotificationBase {
 
         changedFilesStr = tinytim.tim(ul, { list: changedFilesStr });
 
+        const rootDir = Hoek.reach(buildData, 'pipeline.scmRepo.rootDir', { default: '' });
         const subject = `${notificationStatus} - Screwdriver ` +
             `${Hoek.reach(buildData, 'pipeline.scmRepo.name')} ` +
-            `${buildData.jobName} #${Hoek.reach(buildData, 'build.id')}`;
+            `${buildData.jobName} ${rootDir} #${Hoek.reach(buildData, 'build.id')}`;
         const message = `Build status: ${notificationStatus}` +
             `\nBuild link:${buildData.buildLink}`;
         const commitSha = Hoek.reach(buildData, 'build.meta.build.sha').slice(0, 7);
