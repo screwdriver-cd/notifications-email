@@ -1,6 +1,7 @@
 'use strict';
 
 const NotificationBase = require('screwdriver-notifications-base');
+const schema = require('screwdriver-data-schema');
 const Hoek = require('@hapi/hoek');
 const Joi = require('joi');
 const emailer = require('./email');
@@ -28,9 +29,8 @@ const SCHEMA_ADDRESS = Joi.string().email();
 const SCHEMA_ADDRESSES = Joi.array()
     .items(SCHEMA_ADDRESS)
     .min(1);
-const SCHEMA_STATUS = Joi.string().valid(...Object.keys(COLOR_MAP));
 const SCHEMA_STATUSES = Joi.array()
-    .items(SCHEMA_STATUS)
+    .items(schema.plugins.notifications.schemaStatus)
     .min(1);
 const SCHEMA_EMAIL = Joi.alternatives().try(
     Joi.object().keys({ addresses: SCHEMA_ADDRESSES, statuses: SCHEMA_STATUSES }),
@@ -40,26 +40,10 @@ const SCHEMA_BUILD_SETTINGS = Joi.object()
     .keys({
         email: SCHEMA_EMAIL.required()
     }).unknown(true);
-const SCHEMA_SCM_REPO = Joi.object()
-    .keys({
-        name: Joi.string().required()
-    }).unknown(true);
-const SCHEMA_PIPELINE_DATA = Joi.object()
-    .keys({
-        scmRepo: SCHEMA_SCM_REPO.required()
-    }).unknown(true);
 const SCHEMA_BUILD_DATA = Joi.object()
     .keys({
-        settings: SCHEMA_BUILD_SETTINGS.required(),
-        status: SCHEMA_STATUS.required(),
-        pipeline: SCHEMA_PIPELINE_DATA.required(),
-        jobName: Joi.string(),
-        build: Joi.object().keys({
-            id: Joi.number().integer().required()
-        }).unknown(true),
-        event: Joi.object(),
-        buildLink: Joi.string(),
-        isFixed: Joi.boolean()
+        ...schema.plugins.notifications.schemaBuildData,
+        settings: SCHEMA_BUILD_SETTINGS.required()
     });
 const SCHEMA_SMTP_CONFIG = Joi.object()
     .keys({

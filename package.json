@@ -44,6 +44,7 @@
     "@hapi/hoek": "^9.0.4",
     "joi": "^17.2.1",
     "nodemailer": "^4.7.0",
+    "screwdriver-data-schema": "^20.6.0",
     "screwdriver-notifications-base": "^3.0.2",
     "tinytim": "^0.1.1"
   },
