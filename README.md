@@ -1,5 +1,5 @@
 # Notifications (Email)
-[![Version][npm-image]][npm-url] ![Downloads][downloads-image] [![Build Status][status-image]][status-url] [![Open Issues][issues-image]][issues-url] [![Dependency Status][daviddm-image]][daviddm-url] ![License][license-image]
+[![Version][npm-image]][npm-url] ![Downloads][downloads-image] [![Build Status][status-image]][status-url] [![Open Issues][issues-image]][issues-url] ![License][license-image]
 
 > Sends email notifications on certain build events.
 
@@ -69,5 +69,3 @@ Code licensed under the BSD 3-Clause license. See LICENSE file for terms.
 [issues-url]: https://github.com/screwdriver-cd/notifications-email/issues
 [status-image]: https://cd.screwdriver.cd/pipelines/787/badge
 [status-url]: https://cd.screwdriver.cd/pipelines/787
-[daviddm-image]: https://david-dm.org/screwdriver-cd/notifications-email.svg?theme=shields.io
-[daviddm-url]: https://david-dm.org/screwdriver-cd/notifications-email
