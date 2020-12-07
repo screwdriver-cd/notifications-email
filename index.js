@@ -31,19 +31,19 @@ const SCHEMA_ADDRESSES = Joi.array()
     .min(1);
 const SCHEMA_STATUSES = Joi.array()
     .items(schema.plugins.notifications.schemaStatus)
-    .min(1);
+    .min(0);
 const SCHEMA_EMAIL = Joi.alternatives().try(
     Joi.object().keys({ addresses: SCHEMA_ADDRESSES, statuses: SCHEMA_STATUSES }),
     SCHEMA_ADDRESS, SCHEMA_ADDRESSES
 );
-const SCHEMA_BUILD_SETTINGS = Joi.object()
+const SCHEMA_EMAIL_SETTINGS = Joi.object()
     .keys({
         email: SCHEMA_EMAIL.required()
     }).unknown(true);
 const SCHEMA_BUILD_DATA = Joi.object()
     .keys({
         ...schema.plugins.notifications.schemaBuildData,
-        settings: SCHEMA_BUILD_SETTINGS.required()
+        settings: SCHEMA_EMAIL_SETTINGS.required()
     });
 const SCHEMA_SMTP_CONFIG = Joi.object()
     .keys({
@@ -181,7 +181,7 @@ class EmailNotifier extends NotificationBase {
 
     // Validate the settings email object
     static validateConfig(config) {
-        return Joi.validate(config, SCHEMA_EMAIL);
+        return SCHEMA_EMAIL_SETTINGS.validate(config);
     }
 }
 

@@ -512,6 +512,98 @@ describe('index', () => {
                 assert.equal(err.name, 'ValidationError');
             }
         });
+
+        it('is valid config with complete parameters', () => {
+            configMock = {
+                email: {
+                    addresses: ['notify.me@email.com', 'notify.you@email.com'],
+                    statuses: ['SUCCESS', 'FAILURE']
+                }
+            };
+
+            const res = EmailNotifier.validateConfig(configMock);
+
+            assert.isUndefined(res.error);
+        });
+
+        it('is valid config with empty statuses', () => {
+            configMock = {
+                email: {
+                    addresses: ['notify.me@email.com', 'notify.you@email.com'],
+                    statuses: []
+                }
+            };
+
+            const { error } = EmailNotifier.validateConfig(configMock);
+
+            assert.isUndefined(error);
+        });
+
+        it('is valid config with addresses', () => {
+            configMock = {
+                email: {
+                    addresses: ['notify.me@email.com', 'notify.you@email.com']
+                }
+            };
+
+            const { error } = EmailNotifier.validateConfig(configMock);
+
+            assert.isUndefined(error);
+        });
+
+        it('is invalid config with empty parameters', () => {
+            configMock = {};
+            const { error } = EmailNotifier.validateConfig(configMock);
+
+            assert.instanceOf(error, Error);
+            assert.equal(error.name, 'ValidationError');
+        });
+
+        it('valid config with empty email settings', () => {
+            configMock = {
+                email: {}
+            };
+            const { error } = EmailNotifier.validateConfig(configMock);
+
+            assert.isUndefined(error);
+        });
+
+        it('valid config without addresses', () => {
+            configMock = {
+                email: {
+                    statuses: ['SUCCESS', 'FAILURE']
+                }
+            };
+            const { error } = EmailNotifier.validateConfig(configMock);
+
+            assert.isUndefined(error);
+        });
+
+        it('invalid config with empty addresses', () => {
+            configMock = {
+                email: {
+                    addresses: [],
+                    statuses: ['SUCCESS', 'FAILURE']
+                }
+            };
+            const { error } = EmailNotifier.validateConfig(configMock);
+
+            assert.instanceOf(error, Error);
+            assert.equal(error.name, 'ValidationError');
+        });
+
+        it('invalid unknown status', () => {
+            configMock = {
+                email: {
+                    addresses: ['notify.me@email.com'],
+                    statuses: ['DUMMY_STATUS']
+                }
+            };
+            const { error } = EmailNotifier.validateConfig(configMock);
+
+            assert.instanceOf(error, Error);
+            assert.equal(error.name, 'ValidationError');
+        });
     });
 
     describe('buildData is validated', () => {
