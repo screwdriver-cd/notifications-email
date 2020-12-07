@@ -512,6 +512,26 @@ describe('index', () => {
                 assert.equal(err.name, 'ValidationError');
             }
         });
+
+        it('validates normal config format with function', () => {
+            configMock = {
+                addresses: ['notify.me@email.com', 'notify.you@email.com'],
+                statuses: ['SUCCESS', 'FAILURE']
+            };
+
+            const res = EmailNotifier.validateConfig(configMock);
+
+            assert.isOk(res.value);
+        });
+
+        it('validates abnormal config format with function', () => {
+            configMock = ['this', 'is', 'wrong'];
+
+            const res = EmailNotifier.validateConfig(configMock);
+
+            assert.isNotOk(res.value);
+            assert.equal(res.error.message, '"[0]" must be a valid email');
+        });
     });
 
     describe('buildData is validated', () => {
