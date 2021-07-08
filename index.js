@@ -4,9 +4,9 @@ const NotificationBase = require('screwdriver-notifications-base');
 const schema = require('screwdriver-data-schema');
 const Hoek = require('@hapi/hoek');
 const Joi = require('joi');
-const emailer = require('./email');
 const tinytim = require('tinytim');
 const path = require('path');
+const emailer = require('./email');
 
 // See also COLOR_MAP in Slack Notification.
 // https://github.com/screwdriver-cd/notifications-slack/blob/master/index.js#L10
@@ -34,44 +34,45 @@ const SCHEMA_STATUSES = Joi.array()
     .min(0);
 const SCHEMA_EMAIL = Joi.alternatives().try(
     Joi.object().keys({ addresses: SCHEMA_ADDRESSES, statuses: SCHEMA_STATUSES }),
-    SCHEMA_ADDRESS, SCHEMA_ADDRESSES
+    SCHEMA_ADDRESS,
+    SCHEMA_ADDRESSES
 );
 const SCHEMA_EMAIL_SETTINGS = Joi.object()
     .keys({
         email: SCHEMA_EMAIL.required()
-    }).unknown(true);
-const SCHEMA_BUILD_DATA = Joi.object()
-    .keys({
-        ...schema.plugins.notifications.schemaBuildData,
-        settings: SCHEMA_EMAIL_SETTINGS.required()
-    });
-const SCHEMA_SMTP_CONFIG = Joi.object()
-    .keys({
-        host: Joi.string().required(),
-        port: Joi.number().integer().required(),
-        from: SCHEMA_ADDRESS.required(),
-        username: Joi.string(),
-        password: Joi.string()
-    });
+    })
+    .unknown(true);
+const SCHEMA_BUILD_DATA = Joi.object().keys({
+    ...schema.plugins.notifications.schemaBuildData,
+    settings: SCHEMA_EMAIL_SETTINGS.required()
+});
+const SCHEMA_SMTP_CONFIG = Joi.object().keys({
+    host: Joi.string().required(),
+    port: Joi.number()
+        .integer()
+        .required(),
+    from: SCHEMA_ADDRESS.required(),
+    username: Joi.string(),
+    password: Joi.string()
+});
 
 class EmailNotifier extends NotificationBase {
     /**
-    * Constructs an EmailNotifier
-    * @constructor
-    * @param {object} config - Screwdriver config object initialized in API
-    */
+     * Constructs an EmailNotifier
+     * @constructor
+     * @param {object} config - Screwdriver config object initialized in API
+     */
     constructor(config) {
         super(...arguments);
-        this.config = Joi.attempt(config, SCHEMA_SMTP_CONFIG,
-            'Invalid config for email notifications');
+        this.config = Joi.attempt(config, SCHEMA_SMTP_CONFIG, 'Invalid config for email notifications');
     }
 
     /**
-    * Sets listener on server event of name 'eventName' in Screwdriver
-    * Currently, event is triggered with a build status is updated
-    * @method _notify
-    * @param {Object} buildData - Build data emitted with some event from Screwdriver
-    */
+     * Sets listener on server event of name 'eventName' in Screwdriver
+     * Currently, event is triggered with a build status is updated
+     * @method _notify
+     * @param {Object} buildData - Build data emitted with some event from Screwdriver
+     */
     _notify(buildData) {
         // Check buildData format against SCHEMA_BUILD_DATA
         try {
@@ -123,7 +124,7 @@ class EmailNotifier extends NotificationBase {
         let changedFilesStr = '';
 
         if (changedFiles.length > 0 && changedFiles[0] !== '') {
-            changedFiles.forEach((file) => {
+            changedFiles.forEach(file => {
                 const li = '<li>{{contents}}</li>';
 
                 changedFilesStr += tinytim.tim(li, { contents: file });
@@ -137,11 +138,11 @@ class EmailNotifier extends NotificationBase {
         changedFilesStr = tinytim.tim(ul, { list: changedFilesStr });
 
         const rootDir = Hoek.reach(buildData, 'pipeline.scmRepo.rootDir', { default: '' });
-        const subject = `${notificationStatus} - Screwdriver ` +
+        const subject =
+            `${notificationStatus} - Screwdriver ` +
             `${Hoek.reach(buildData, 'pipeline.scmRepo.name')} ` +
             `${buildData.jobName} ${rootDir} #${Hoek.reach(buildData, 'build.id')}`;
-        const message = `Build status: ${notificationStatus}` +
-            `\nBuild link:${buildData.buildLink}`;
+        const message = `Build status: ${notificationStatus}\nBuild link:${buildData.buildLink}`;
         const commitSha = Hoek.reach(buildData, 'build.meta.build.sha').slice(0, 7);
         const commitMessage = Hoek.reach(buildData, 'build.meta.commit.message');
         const commitLink = Hoek.reach(buildData, 'build.meta.commit.url');
