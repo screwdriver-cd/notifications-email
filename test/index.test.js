@@ -1,7 +1,7 @@
 'use strict';
 
 const Hapi = require('@hapi/hapi');
-const assert = require('chai').assert;
+const { assert } = require('chai');
 const mockery = require('mockery');
 const sinon = require('sinon');
 
@@ -102,32 +102,30 @@ describe('index', () => {
             notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
         });
 
-        it('verifies that included status creates nodemailer transporter', (done) => {
+        it('verifies that included status creates nodemailer transporter', done => {
             serverMock.event(eventMock);
             serverMock.events.on(eventMock, data => notifier.notify(data));
             serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
-                assert.calledWith(nodemailerMock.createTransport,
-                    { host: configMock.host, port: configMock.port });
+                assert.calledWith(nodemailerMock.createTransport, { host: configMock.host, port: configMock.port });
                 done();
             });
         });
 
-        it('when the build status is fixed, Overwrites the notification status title', (done) => {
+        it('when the build status is fixed, Overwrites the notification status title', done => {
             serverMock.event(eventMock);
             serverMock.events.on(eventMock, data => notifier.notify(data));
             serverMock.events.emit(eventMock, buildDataMock);
             buildDataMock.isFixed = true;
 
             process.nextTick(() => {
-                assert.calledWith(nodemailerMock.createTransport,
-                    { host: configMock.host, port: configMock.port });
+                assert.calledWith(nodemailerMock.createTransport, { host: configMock.host, port: configMock.port });
                 done();
             });
         });
 
-        it('creates a nodemailer with auth when password and username are provided', (done) => {
+        it('creates a nodemailer with auth when password and username are provided', done => {
             configMock.username = 'batman';
             configMock.password = 'robin';
 
@@ -138,20 +136,19 @@ describe('index', () => {
             serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
-                assert.calledWith(nodemailerMock.createTransport,
-                    {
-                        host: configMock.host,
-                        port: configMock.port,
-                        auth: {
-                            user: configMock.username,
-                            pass: configMock.password
-                        }
-                    });
+                assert.calledWith(nodemailerMock.createTransport, {
+                    host: configMock.host,
+                    port: configMock.port,
+                    auth: {
+                        user: configMock.username,
+                        pass: configMock.password
+                    }
+                });
                 done();
             });
         });
 
-        it('verifies that non-included status returns null', (done) => {
+        it('verifies that non-included status returns null', done => {
             const buildDataMockUnincluded = {
                 settings: {
                     email: {
@@ -172,7 +169,7 @@ describe('index', () => {
             });
         });
 
-        it('verifies that non-subscribed status does not send a notification', (done) => {
+        it('verifies that non-subscribed status does not send a notification', done => {
             const buildDataMockUnincluded = {
                 settings: {
                     email: {
@@ -194,7 +191,7 @@ describe('index', () => {
         });
 
         it(`sets addresses and statuses for simple
-                email string config settings with no changed files`, (done) => {
+                email string config settings with no changed files`, done => {
             const buildDataMockSimple = {
                 settings: {
                     email: 'notify.me@email.com'
@@ -236,13 +233,12 @@ describe('index', () => {
             serverMock.events.emit(eventMock, buildDataMockSimple);
 
             process.nextTick(() => {
-                assert.calledWith(nodemailerMock.createTransport,
-                    { host: configMock.host, port: configMock.port });
+                assert.calledWith(nodemailerMock.createTransport, { host: configMock.host, port: configMock.port });
                 done();
             });
         });
 
-        it('sets addresses and statuses for simple email string config settings', (done) => {
+        it('sets addresses and statuses for simple email string config settings', done => {
             const buildDataMockSimple = {
                 settings: {
                     email: 'notify.me@email.com'
@@ -284,13 +280,12 @@ describe('index', () => {
             serverMock.events.emit(eventMock, buildDataMockSimple);
 
             process.nextTick(() => {
-                assert.calledWith(nodemailerMock.createTransport,
-                    { host: configMock.host, port: configMock.port });
+                assert.calledWith(nodemailerMock.createTransport, { host: configMock.host, port: configMock.port });
                 done();
             });
         });
 
-        it('sets addresses, statuses and srcDir for simple email string config', (done) => {
+        it('sets addresses, statuses and srcDir for simple email string config', done => {
             const buildDataMockSimple = {
                 settings: {
                     email: 'notify.me@email.com'
@@ -333,13 +328,12 @@ describe('index', () => {
             serverMock.events.emit(eventMock, buildDataMockSimple);
 
             process.nextTick(() => {
-                assert.calledWith(nodemailerMock.createTransport,
-                    { host: configMock.host, port: configMock.port });
+                assert.calledWith(nodemailerMock.createTransport, { host: configMock.host, port: configMock.port });
                 done();
             });
         });
 
-        it('sets addresses and statuses for an array of emails in config settings', (done) => {
+        it('sets addresses and statuses for an array of emails in config settings', done => {
             const buildDataMockArray = {
                 settings: {
                     email: ['notify.me@email.com', 'notify.you@email.com']
@@ -381,13 +375,12 @@ describe('index', () => {
             serverMock.events.emit(eventMock, buildDataMockArray);
 
             process.nextTick(() => {
-                assert.calledWith(nodemailerMock.createTransport,
-                    { host: configMock.host, port: configMock.port });
+                assert.calledWith(nodemailerMock.createTransport, { host: configMock.host, port: configMock.port });
                 done();
             });
         });
 
-        it('allows additional notifications plugins in buildData.settings', (done) => {
+        it('allows additional notifications plugins in buildData.settings', done => {
             buildDataMock.settings.hipchat = {
                 awesome: 'sauce',
                 catch: 22
@@ -398,8 +391,7 @@ describe('index', () => {
             serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
-                assert.calledWith(nodemailerMock.createTransport,
-                    { host: configMock.host, port: configMock.port });
+                assert.calledWith(nodemailerMock.createTransport, { host: configMock.host, port: configMock.port });
                 done();
             });
         });
@@ -649,7 +641,7 @@ describe('index', () => {
             notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
         });
 
-        it('validates status', (done) => {
+        it('validates status', done => {
             buildDataMock.status = 22;
             serverMock.event(eventMock);
             serverMock.events.on(eventMock, data => notifier.notify(data));
@@ -661,7 +653,7 @@ describe('index', () => {
             });
         });
 
-        it('validates settings', (done) => {
+        it('validates settings', done => {
             buildDataMock.settings = ['hello@world.com', 'goodbye@universe.com'];
             serverMock.event(eventMock);
             serverMock.events.on(eventMock, data => notifier.notify(data));
@@ -673,7 +665,7 @@ describe('index', () => {
             });
         });
 
-        it('validates buildData format', (done) => {
+        it('validates buildData format', done => {
             const buildDataMockInvalid = ['this', 'is', 'wrong'];
 
             serverMock.event(eventMock);
