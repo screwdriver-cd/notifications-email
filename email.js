@@ -1,5 +1,6 @@
 'use strict';
 
+const logger = require('screwdriver-logger');
 const nodemailer = require('nodemailer');
 
 /**
@@ -17,16 +18,11 @@ const nodemailer = require('nodemailer');
  * @param {String} [smtpConfig.auth.pass]  smtp password
  */
 module.exports = (mailOpts, smtpConfig) => {
-    console.log('in notifications-email email.js');
     const transporter = nodemailer.createTransport(smtpConfig);
-
-    console.log('transporter: ', transporter);
 
     return transporter.sendMail(mailOpts, error => {
         if (error) {
-            console.log('error!!!1');
-            // eslint-disable-next-line no-console
-            console.error(error);
+            logger.error(`sendMail: failed to notify email ${mailOpts.to}: ${error.message}`);
         }
     });
 };
