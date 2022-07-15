@@ -46,6 +46,10 @@ const SCHEMA_BUILD_DATA = Joi.object().keys({
     ...schema.plugins.notifications.schemaBuildData,
     settings: SCHEMA_EMAIL_SETTINGS.required()
 });
+const SCHEMA_JOB_DATA = Joi.object().keys({
+    ...schema.plugins.notifications.schemaJobData,
+    settings: SCHEMA_EMAIL_SETTINGS.required()
+});
 const SCHEMA_SMTP_CONFIG = Joi.object().keys({
     host: Joi.string().required(),
     port: Joi.number()
@@ -55,6 +59,188 @@ const SCHEMA_SMTP_CONFIG = Joi.object().keys({
     username: Joi.string(),
     password: Joi.string()
 });
+
+/**
+ * Handle email messaging for build status 
+ * @method buildStatus
+ * @param  {Object}         buildData
+ * @param  {String}         buildData.status             Build status
+ * @param  {Object}         buildData.pipeline           Pipeline
+ * @param  {String}         buildData.jobName            Job name
+ * @param  {Object}         buildData.build              Build
+ * @param  {Object}         buildData.event              Event
+ * @param  {String}         buildData.buildLink          Build link
+ * @param  {Object}         buildData.settings           Notification setting
+ */
+function buildStatus(buildData) {
+    // Check buildData format against SCHEMA_BUILD_DATA
+    try {
+        Joi.attempt(buildData, SCHEMA_BUILD_DATA, 'Invalid build data format');
+    } catch (e) {
+        return;
+    }
+
+    const emailSettings = Hoek.reach(buildData, 'settings.email');
+
+    // Convert shorthand config to object
+    // ie: 'email: [test@email.com, test2@email.com]' or 'email: test@email.com'
+    if (typeof emailSettings === 'string' || Array.isArray(emailSettings)) {
+        buildData.settings.email = {
+            addresses: emailSettings
+        };
+    }
+
+    // Make sure statuses are set
+    const defaultSettings = {
+        statuses: DEFAULT_STATUSES
+    };
+
+    buildData.settings.email = Object.assign(defaultSettings, buildData.settings.email);
+
+    const statuses = Hoek.reach(buildData, 'settings.email.statuses');
+
+    // Add for fixed notification
+    if (buildData.isFixed) {
+        statuses.push('FIXED');
+    }
+
+    // Do not change the `buildData.status` directly
+    // It affects the behavior of other notification plugins
+    let notificationStatus = buildData.status;
+
+    if (statuses.includes('FAILURE')) {
+        if (notificationStatus === 'SUCCESS' && buildData.isFixed) {
+            notificationStatus = 'FIXED';
+        }
+    }
+    // Short circuit if status does not match
+    if (!statuses.includes(notificationStatus)) {
+        return;
+    }
+
+    const changedFiles = Hoek.reach(buildData, 'build.meta.commit.changedFiles').split(',');
+
+    let changedFilesStr = '';
+
+    if (changedFiles.length > 0 && changedFiles[0] !== '') {
+        changedFiles.forEach(file => {
+            const li = '<li>{{contents}}</li>';
+
+            changedFilesStr += tinytim.tim(li, { contents: file });
+        });
+    } else {
+        changedFilesStr = 'There are no changed files.';
+    }
+
+    const ul = '<ul>{{list}}</ul>';
+
+    changedFilesStr = tinytim.tim(ul, { list: changedFilesStr });
+
+    const rootDir = Hoek.reach(buildData, 'pipeline.scmRepo.rootDir', { default: '' });
+    const subject =
+        `${notificationStatus} - Screwdriver ` +
+        `${Hoek.reach(buildData, 'pipeline.scmRepo.name')} ` +
+        `${buildData.jobName} ${rootDir} #${Hoek.reach(buildData, 'build.id')}`;
+    const message = `Build status: ${notificationStatus}\nBuild link:${buildData.buildLink}`;
+    const commitSha = Hoek.reach(buildData, 'build.meta.build.sha').slice(0, 7);
+    const commitMessage = Hoek.reach(buildData, 'build.meta.commit.message');
+    const commitLink = Hoek.reach(buildData, 'build.meta.commit.url');
+    const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
+        buildStatus: notificationStatus,
+        buildLink: buildData.buildLink,
+        buildId: buildData.build.id,
+        changedFiles: changedFilesStr,
+        commitSha,
+        commitMessage,
+        commitLink,
+        statusColor: COLOR_MAP[buildData.status]
+    });
+
+    const mailOpts = {
+        from: this.config.from,
+        to: Hoek.reach(buildData, 'settings.email.addresses'),
+        subject,
+        text: message,
+        html
+    };
+
+    const smtpConfig = {
+        host: this.config.host,
+        port: this.config.port
+    };
+
+    if (this.config.username && this.config.password) {
+        smtpConfig.auth = {
+            user: this.config.username,
+            pass: this.config.password
+        };
+    }
+
+    emailer(mailOpts, smtpConfig);
+}
+
+/**
+ * Handle email messaging for job status 
+ * @method jobStatus
+ * @param  {Object}         jobData
+ * @param  {String}         jobData.status             Status
+ * @param  {Object}         jobData.pipeline           Pipeline
+ * @param  {String}         jobData.jobName            Job name
+ * @param  {String}         jobData.pipelineLink       Pipeline link
+ * @param  {String}         jobData.message            Message
+ * @param  {Object}         jobData.settings           Notification setting
+ */
+function jobStatus(jobData) {
+    try {
+        Joi.attempt(jobData, SCHEMA_JOB_DATA, 'Invalid job data format');
+    } catch (e) {
+        return;
+    }
+
+    const emailSettings = Hoek.reach(jobData, 'settings.email');
+
+    // Convert shorthand config to object
+    // ie: 'email: [test@email.com, test2@email.com]' or 'email: test@email.com'
+    if (typeof emailSettings === 'string' || Array.isArray(emailSettings)) {
+        jobData.settings.email = {
+            addresses: emailSettings
+        };
+    }
+
+    // Make sure statuses are set
+    const defaultSettings = {
+        statuses: DEFAULT_STATUSES
+    };
+
+    jobData.settings.email = Object.assign(defaultSettings, jobData.settings.email);
+
+    const rootDir = Hoek.reach(jobData, 'pipeline.scmRepo.rootDir', { default: '' });
+    const subject =
+        `${jobData.status} - Screwdriver ` +
+        `${Hoek.reach(jobData, 'pipeline.scmRepo.name')} ` +
+        `${jobData.jobName} ${rootDir}`;
+    const message = `${jobData.message}\nPipeline link:${jobData.pipelineLink}`;
+    const mailOpts = {
+        from: this.config.from,
+        to: Hoek.reach(jobData, 'settings.email.addresses'),
+        subject,
+        text: message
+    };
+
+    const smtpConfig = {
+        host: this.config.host,
+        port: this.config.port
+    };
+
+    if (this.config.username && this.config.password) {
+        smtpConfig.auth = {
+            user: this.config.username,
+            pass: this.config.password
+        };
+    }
+
+    emailer(mailOpts, smtpConfig);
+}
 
 class EmailNotifier extends NotificationBase {
     /**
@@ -69,115 +255,25 @@ class EmailNotifier extends NotificationBase {
 
     /**
      * Sets listener on server event of name 'eventName' in Screwdriver
-     * Currently, event is triggered with a build status is updated
      * @method _notify
-     * @param {Object} buildData - Build data emitted with some event from Screwdriver
+     * @param {String} event - Event emitted from Screwdriver
+     * @param {Object} payload - Build data emitted with some event from Screwdriver
      */
-    _notify(buildData) {
-        // Check buildData format against SCHEMA_BUILD_DATA
-        try {
-            Joi.attempt(buildData, SCHEMA_BUILD_DATA, 'Invalid build data format');
-        } catch (e) {
+    _notify(event, payload) {
+        if (Object.keys(payload.settings).length === 0) {
             return;
         }
 
-        const emailSettings = Hoek.reach(buildData, 'settings.email');
-
-        // Convert shorthand config to object
-        // ie: 'email: [test@email.com, test2@email.com]' or 'email: test@email.com'
-        if (typeof emailSettings === 'string' || Array.isArray(emailSettings)) {
-            buildData.settings.email = {
-                addresses: emailSettings
-            };
+        switch(event) {
+            case 'build_status':
+                buildStatus(payload);
+                break;
+            case 'job_status':
+                jobStatus(payload);
+                break;
+            default:
+                return;
         }
-
-        // Make sure statuses are set
-        const defaultSettings = {
-            statuses: DEFAULT_STATUSES
-        };
-
-        buildData.settings.email = Object.assign(defaultSettings, buildData.settings.email);
-
-        const statuses = Hoek.reach(buildData, 'settings.email.statuses');
-
-        // Add for fixed notification
-        if (buildData.isFixed) {
-            statuses.push('FIXED');
-        }
-
-        // Do not change the `buildData.status` directly
-        // It affects the behavior of other notification plugins
-        let notificationStatus = buildData.status;
-
-        if (statuses.includes('FAILURE')) {
-            if (notificationStatus === 'SUCCESS' && buildData.isFixed) {
-                notificationStatus = 'FIXED';
-            }
-        }
-        // Short circuit if status does not match
-        if (!statuses.includes(notificationStatus)) {
-            return;
-        }
-
-        const changedFiles = Hoek.reach(buildData, 'build.meta.commit.changedFiles').split(',');
-
-        let changedFilesStr = '';
-
-        if (changedFiles.length > 0 && changedFiles[0] !== '') {
-            changedFiles.forEach(file => {
-                const li = '<li>{{contents}}</li>';
-
-                changedFilesStr += tinytim.tim(li, { contents: file });
-            });
-        } else {
-            changedFilesStr = 'There are no changed files.';
-        }
-
-        const ul = '<ul>{{list}}</ul>';
-
-        changedFilesStr = tinytim.tim(ul, { list: changedFilesStr });
-
-        const rootDir = Hoek.reach(buildData, 'pipeline.scmRepo.rootDir', { default: '' });
-        const subject =
-            `${notificationStatus} - Screwdriver ` +
-            `${Hoek.reach(buildData, 'pipeline.scmRepo.name')} ` +
-            `${buildData.jobName} ${rootDir} #${Hoek.reach(buildData, 'build.id')}`;
-        const message = `Build status: ${notificationStatus}\nBuild link:${buildData.buildLink}`;
-        const commitSha = Hoek.reach(buildData, 'build.meta.build.sha').slice(0, 7);
-        const commitMessage = Hoek.reach(buildData, 'build.meta.commit.message');
-        const commitLink = Hoek.reach(buildData, 'build.meta.commit.url');
-        const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
-            buildStatus: notificationStatus,
-            buildLink: buildData.buildLink,
-            buildId: buildData.build.id,
-            changedFiles: changedFilesStr,
-            commitSha,
-            commitMessage,
-            commitLink,
-            statusColor: COLOR_MAP[buildData.status]
-        });
-
-        const mailOpts = {
-            from: this.config.from,
-            to: Hoek.reach(buildData, 'settings.email.addresses'),
-            subject,
-            text: message,
-            html
-        };
-
-        const smtpConfig = {
-            host: this.config.host,
-            port: this.config.port
-        };
-
-        if (this.config.username && this.config.password) {
-            smtpConfig.auth = {
-                user: this.config.username,
-                pass: this.config.password
-            };
-        }
-
-        emailer(mailOpts, smtpConfig);
     }
 
     // Validate the settings email object
