@@ -190,7 +190,7 @@ function buildStatus(buildData, config) {
  * @param  {String}         jobData.pipelineLink       Pipeline link
  * @param  {String}         jobData.message            Message
  * @param  {Object}         jobData.settings           Notification setting
- * @param  {Object}         config                       Email notifications config
+ * @param  {Object}         config                     Email notifications config
  */
 function jobStatus(jobData, config) {
     try {
@@ -271,7 +271,7 @@ class EmailNotifier extends NotificationBase {
                 buildStatus(payload, this.config);
                 break;
             case 'job_status':
-                jobStatus(payload);
+                jobStatus(payload, this.config);
                 break;
             default:
         }
