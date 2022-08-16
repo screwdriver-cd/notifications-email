@@ -61,7 +61,7 @@ const SCHEMA_SMTP_CONFIG = Joi.object().keys({
 });
 
 /**
- * Handle email messaging for build status 
+ * Handle email messaging for build status
  * @method buildStatus
  * @param  {Object}         buildData
  * @param  {String}         buildData.status             Build status
@@ -71,8 +71,9 @@ const SCHEMA_SMTP_CONFIG = Joi.object().keys({
  * @param  {Object}         buildData.event              Event
  * @param  {String}         buildData.buildLink          Build link
  * @param  {Object}         buildData.settings           Notification setting
+ * @param  {Object}         config                       Email notifications config
  */
-function buildStatus(buildData) {
+function buildStatus(buildData, config) {
     // Check buildData format against SCHEMA_BUILD_DATA
     try {
         Joi.attempt(buildData, SCHEMA_BUILD_DATA, 'Invalid build data format');
@@ -157,7 +158,7 @@ function buildStatus(buildData) {
     });
 
     const mailOpts = {
-        from: this.config.from,
+        from: config.from,
         to: Hoek.reach(buildData, 'settings.email.addresses'),
         subject,
         text: message,
@@ -165,14 +166,14 @@ function buildStatus(buildData) {
     };
 
     const smtpConfig = {
-        host: this.config.host,
-        port: this.config.port
+        host: config.host,
+        port: config.port
     };
 
-    if (this.config.username && this.config.password) {
+    if (config.username && config.password) {
         smtpConfig.auth = {
-            user: this.config.username,
-            pass: this.config.password
+            user: config.username,
+            pass: config.password
         };
     }
 
@@ -180,7 +181,7 @@ function buildStatus(buildData) {
 }
 
 /**
- * Handle email messaging for job status 
+ * Handle email messaging for job status
  * @method jobStatus
  * @param  {Object}         jobData
  * @param  {String}         jobData.status             Status
@@ -189,8 +190,9 @@ function buildStatus(buildData) {
  * @param  {String}         jobData.pipelineLink       Pipeline link
  * @param  {String}         jobData.message            Message
  * @param  {Object}         jobData.settings           Notification setting
+ * @param  {Object}         config                       Email notifications config
  */
-function jobStatus(jobData) {
+function jobStatus(jobData, config) {
     try {
         Joi.attempt(jobData, SCHEMA_JOB_DATA, 'Invalid job data format');
     } catch (e) {
@@ -221,21 +223,21 @@ function jobStatus(jobData) {
         `${jobData.jobName} ${rootDir}`;
     const message = `${jobData.message}\nPipeline link:${jobData.pipelineLink}`;
     const mailOpts = {
-        from: this.config.from,
+        from: config.from,
         to: Hoek.reach(jobData, 'settings.email.addresses'),
         subject,
         text: message
     };
 
     const smtpConfig = {
-        host: this.config.host,
-        port: this.config.port
+        host: config.host,
+        port: config.port
     };
 
-    if (this.config.username && this.config.password) {
+    if (config.username && config.password) {
         smtpConfig.auth = {
-            user: this.config.username,
-            pass: this.config.password
+            user: config.username,
+            pass: config.password
         };
     }
 
@@ -260,19 +262,18 @@ class EmailNotifier extends NotificationBase {
      * @param {Object} payload - Build data emitted with some event from Screwdriver
      */
     _notify(event, payload) {
-        if (Object.keys(payload.settings).length === 0) {
+        if (!payload || !payload.settings || Object.keys(payload.settings).length === 0) {
             return;
         }
 
-        switch(event) {
+        switch (event) {
             case 'build_status':
-                buildStatus(payload);
+                buildStatus(payload, this.config);
                 break;
             case 'job_status':
                 jobStatus(payload);
                 break;
             default:
-                return;
         }
     }
 
