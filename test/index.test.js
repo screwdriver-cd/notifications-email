@@ -769,7 +769,7 @@ describe('index', () => {
             });
         });
 
-        it('validates buildData format', done => {
+        it('validates jobData format', done => {
             const jobDataMockInvalid = ['this', 'is', 'wrong'];
 
             serverMock.event(eventMock);
