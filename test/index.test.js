@@ -7,28 +7,20 @@ const sinon = require('sinon');
 
 sinon.assert.expose(assert, { prefix: '' });
 
-/**
- * helper to generate a nodemailer mock
- * @method getUserMock
- * @return {Function}         Stubbed function
- */
-function getNodemailerMock() {
+describe('index', () => {
     const sendMailMock = {
         sendMail: sinon.stub().yieldsAsync()
     };
-
-    return { createTransport: sinon.stub().returns(sendMailMock) };
-}
-
-describe('index', () => {
-    const eventMock = 'build_status_test';
-
+    const nodemailerMock = {
+        createTransport: sinon.stub().returns(sendMailMock)
+    };
     let serverMock;
     let configMock;
     let notifier;
     let buildDataMock;
-    let nodemailerMock;
+    let jobDataMock;
     let EmailNotifier;
+    let eventMock;
 
     before(() => {
         mockery.enable({
@@ -36,7 +28,6 @@ describe('index', () => {
             warnOnUnregistered: false
         });
 
-        nodemailerMock = getNodemailerMock();
         mockery.registerMock('nodemailer', nodemailerMock);
 
         // eslint-disable-next-line global-require
@@ -50,6 +41,7 @@ describe('index', () => {
     describe('notifier listens to server emits', () => {
         beforeEach(() => {
             nodemailerMock.createTransport.reset();
+            nodemailerMock.createTransport.returns(sendMailMock);
 
             serverMock = new Hapi.Server();
             configMock = {
@@ -99,12 +91,13 @@ describe('index', () => {
                 buildLink: 'http://thisisaSDtest.com/builds/1234',
                 isFixed: false
             };
-            notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
+            notifier = new EmailNotifier(configMock, serverMock, 'build_status');
+            eventMock = 'build_status';
         });
 
         it('verifies that included status creates nodemailer transporter', done => {
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
@@ -115,7 +108,7 @@ describe('index', () => {
 
         it('when the build status is fixed, Overwrites the notification status title', done => {
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMock);
             buildDataMock.isFixed = true;
 
@@ -129,10 +122,10 @@ describe('index', () => {
             configMock.username = 'batman';
             configMock.password = 'robin';
 
-            notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
+            notifier = new EmailNotifier(configMock, serverMock, 'build_status');
 
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
@@ -160,7 +153,7 @@ describe('index', () => {
             };
 
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMockUnincluded);
 
             process.nextTick(() => {
@@ -181,7 +174,7 @@ describe('index', () => {
             };
 
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMockUnincluded);
 
             process.nextTick(() => {
@@ -229,7 +222,7 @@ describe('index', () => {
             };
 
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMockSimple);
 
             process.nextTick(() => {
@@ -276,7 +269,7 @@ describe('index', () => {
             };
 
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMockSimple);
 
             process.nextTick(() => {
@@ -324,7 +317,7 @@ describe('index', () => {
             };
 
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMockSimple);
 
             process.nextTick(() => {
@@ -371,7 +364,7 @@ describe('index', () => {
             };
 
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMockArray);
 
             process.nextTick(() => {
@@ -387,7 +380,7 @@ describe('index', () => {
             };
 
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
@@ -400,6 +393,7 @@ describe('index', () => {
     describe('config and buildData are validated', () => {
         beforeEach(() => {
             nodemailerMock.createTransport.reset();
+            nodemailerMock.createTransport.returns(sendMailMock);
 
             serverMock = new Hapi.Server();
             configMock = {
@@ -407,41 +401,12 @@ describe('index', () => {
                 port: 25,
                 from: 'user@email.com'
             };
-            buildDataMock = {
-                settings: {
-                    email: {
-                        addresses: ['notify.me@email.com', 'notify.you@email.com'],
-                        statuses: ['SUCCESS', 'FAILURE']
-                    }
-                },
-                status: 'SUCCESS',
-                pipeline: {
-                    id: '123',
-                    scmRepo: {
-                        name: 'screwdriver-cd/notifications'
-                    }
-                },
-                jobName: 'publish',
-                build: {
-                    id: '1234'
-                },
-                event: {
-                    id: '12345',
-                    causeMessage: 'Merge pull request #26 from screwdriver-cd/notifications',
-                    creator: { username: 'foo' },
-                    commit: {
-                        author: { name: 'foo' },
-                        message: 'fixing a bug'
-                    }
-                },
-                buildLink: 'http://thisisaSDtest.com/builds/1234'
-            };
         });
 
         it('validates host', () => {
             configMock.host = 22;
             try {
-                notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
+                notifier = new EmailNotifier(configMock, serverMock, 'build_status');
                 assert.fail('should not get here');
             } catch (err) {
                 assert.instanceOf(err, Error);
@@ -452,7 +417,7 @@ describe('index', () => {
         it('validates port', () => {
             configMock.port = 'nonIntegerPort';
             try {
-                notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
+                notifier = new EmailNotifier(configMock, serverMock, 'build_status');
                 assert.fail('should not get here');
             } catch (err) {
                 assert.instanceOf(err, Error);
@@ -463,7 +428,7 @@ describe('index', () => {
         it('validates the from email', () => {
             configMock.from = 'nonEmailString';
             try {
-                notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
+                notifier = new EmailNotifier(configMock, serverMock, 'build_status');
                 assert.fail('should not get here');
             } catch (err) {
                 assert.instanceOf(err, Error);
@@ -474,7 +439,7 @@ describe('index', () => {
         it('validates the username', () => {
             configMock.username = 22;
             try {
-                notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
+                notifier = new EmailNotifier(configMock, serverMock, 'build_status');
                 assert.fail('should not get here');
             } catch (err) {
                 assert.instanceOf(err, Error);
@@ -485,7 +450,7 @@ describe('index', () => {
         it('validates the password', () => {
             configMock.password = 22;
             try {
-                notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
+                notifier = new EmailNotifier(configMock, serverMock, 'build_status');
                 assert.fail('should not get here');
             } catch (err) {
                 assert.instanceOf(err, Error);
@@ -497,7 +462,7 @@ describe('index', () => {
             configMock = ['this', 'is', 'wrong'];
 
             try {
-                notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
+                notifier = new EmailNotifier(configMock, serverMock, 'build_status');
                 assert.fail('should not get here');
             } catch (err) {
                 assert.instanceOf(err, Error);
@@ -601,6 +566,7 @@ describe('index', () => {
     describe('buildData is validated', () => {
         beforeEach(() => {
             nodemailerMock.createTransport.reset();
+            nodemailerMock.createTransport.returns(sendMailMock);
 
             serverMock = new Hapi.Server();
             configMock = {
@@ -638,13 +604,13 @@ describe('index', () => {
                 buildLink: 'http://thisisaSDtest.com/builds/1234'
             };
 
-            notifier = new EmailNotifier(configMock, serverMock, 'build_status_test');
+            notifier = new EmailNotifier(configMock, serverMock, 'build_status');
         });
 
         it('validates status', done => {
             buildDataMock.status = 22;
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
@@ -656,7 +622,7 @@ describe('index', () => {
         it('validates settings', done => {
             buildDataMock.settings = ['hello@world.com', 'goodbye@universe.com'];
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMock);
 
             process.nextTick(() => {
@@ -669,8 +635,146 @@ describe('index', () => {
             const buildDataMockInvalid = ['this', 'is', 'wrong'];
 
             serverMock.event(eventMock);
-            serverMock.events.on(eventMock, data => notifier.notify(data));
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
             serverMock.events.emit(eventMock, buildDataMockInvalid);
+
+            process.nextTick(() => {
+                assert.notCalled(nodemailerMock.createTransport);
+                done();
+            });
+        });
+    });
+
+    describe('config and payload for job event are validated', () => {
+        beforeEach(() => {
+            nodemailerMock.createTransport.reset();
+            nodemailerMock.createTransport.returns(sendMailMock);
+
+            serverMock = new Hapi.Server();
+            configMock = {
+                host: 'testing.aserver.com',
+                port: 25,
+                from: 'user@email.com'
+            };
+            jobDataMock = {
+                settings: {
+                    email: {
+                        addresses: ['notify.me@email.com', 'notify.you@email.com'],
+                        statuses: ['SUCCESS', 'FAILURE']
+                    }
+                },
+                status: 'SUCCESS',
+                pipeline: {
+                    id: '123',
+                    scmRepo: {
+                        name: 'screwdriver-cd/notifications'
+                    }
+                },
+                jobName: 'publish',
+                message: 'something went wrong',
+                buildLink: 'http://thisisaSDtest.com/pipeline/1234'
+            };
+            notifier = new EmailNotifier(configMock, serverMock, 'job_status');
+            eventMock = 'job_status';
+        });
+
+        it('validates host', () => {
+            configMock.host = 22;
+            try {
+                notifier = new EmailNotifier(configMock, serverMock, 'job_status');
+                assert.fail('should not get here');
+            } catch (err) {
+                assert.instanceOf(err, Error);
+                assert.equal(err.name, 'ValidationError');
+            }
+        });
+
+        it('validates port', () => {
+            configMock.port = 'nonIntegerPort';
+            try {
+                notifier = new EmailNotifier(configMock, serverMock, 'job_status');
+                assert.fail('should not get here');
+            } catch (err) {
+                assert.instanceOf(err, Error);
+                assert.equal(err.name, 'ValidationError');
+            }
+        });
+
+        it('validates the from email', () => {
+            configMock.from = 'nonEmailString';
+            try {
+                notifier = new EmailNotifier(configMock, serverMock, 'job_status');
+                assert.fail('should not get here');
+            } catch (err) {
+                assert.instanceOf(err, Error);
+                assert.equal(err.name, 'ValidationError');
+            }
+        });
+
+        it('validates the username', () => {
+            configMock.username = 22;
+            try {
+                notifier = new EmailNotifier(configMock, serverMock, 'job_status');
+                assert.fail('should not get here');
+            } catch (err) {
+                assert.instanceOf(err, Error);
+                assert.equal(err.name, 'ValidationError');
+            }
+        });
+
+        it('validates the password', () => {
+            configMock.password = 22;
+            try {
+                notifier = new EmailNotifier(configMock, serverMock, 'job_status');
+                assert.fail('should not get here');
+            } catch (err) {
+                assert.instanceOf(err, Error);
+                assert.equal(err.name, 'ValidationError');
+            }
+        });
+
+        it('validates config format', () => {
+            configMock = ['this', 'is', 'wrong'];
+
+            try {
+                notifier = new EmailNotifier(configMock, serverMock, 'job_status');
+                assert.fail('should not get here');
+            } catch (err) {
+                assert.instanceOf(err, Error);
+                assert.equal(err.name, 'ValidationError');
+            }
+        });
+
+        it('validates status', done => {
+            jobDataMock.status = 22;
+            serverMock.event(eventMock);
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
+            serverMock.events.emit(eventMock, jobDataMock);
+
+            process.nextTick(() => {
+                assert.notCalled(nodemailerMock.createTransport);
+                done();
+            });
+        });
+
+        it('validates settings', done => {
+            jobDataMock.settings = ['hello@world.com', 'goodbye@universe.com'];
+            serverMock.event(eventMock);
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
+            serverMock.events.emit(eventMock, jobDataMock);
+
+            process.nextTick(() => {
+                assert.notCalled(nodemailerMock.createTransport);
+                done();
+            });
+        });
+
+        it('validates jobData format', done => {
+            const jobDataMockInvalid = ['this', 'is', 'wrong'];
+
+            serverMock.event(eventMock);
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
+            serverMock.events.emit(eventMock, jobDataMockInvalid);
 
             process.nextTick(() => {
                 assert.notCalled(nodemailerMock.createTransport);
