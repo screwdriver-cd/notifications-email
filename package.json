@@ -5,12 +5,11 @@
   "main": "index.js",
   "scripts": {
     "pretest": "eslint .",
-    "test": "nyc --report-dir ./artifacts/coverage --reporter=lcov mocha --reporter mocha-multi-reporters --reporter-options configFile=./mocha.config.json --recursive --timeout 10000 --retries 1 --exit --allow-uncaught true --color true",
-    "semantic-release": "semantic-release pre && npm publish && semantic-release post"
+    "test": "nyc --report-dir ./artifacts/coverage --reporter=lcov mocha --reporter mocha-multi-reporters --reporter-options configFile=./mocha.config.json --recursive --timeout 10000 --retries 1 --exit --allow-uncaught true --color true"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:screwdriver-cd/notifications-email.git"
+    "url": "git+https://github.com/screwdriver-cd/notifications-email.git"
   },
   "homepage": "https://github.com/screwdriver-cd/notifications-email",
   "bugs": "https://github.com/screwdriver-cd/screwdriver/issues",
@@ -49,13 +48,10 @@
     "nodemailer": "^6.4.16",
     "screwdriver-data-schema": "^21.0.0",
     "screwdriver-logger": "^1.1.0",
-    "screwdriver-notifications-base": "^3.0.2",
+    "screwdriver-notifications-base": "^3.2.0",
     "tinytim": "^0.1.1"
   },
   "release": {
-    "debug": false,
-    "verifyConditions": {
-      "path": "./node_modules/semantic-release/src/lib/plugin-noop.js"
-    }
+    "debug": false
   }
 }
