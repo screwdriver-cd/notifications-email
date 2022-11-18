@@ -26,12 +26,8 @@ const COLOR_MAP = {
 const DEFAULT_STATUSES = ['FAILURE'];
 // Joi Schema Validation
 const SCHEMA_ADDRESS = Joi.string().email();
-const SCHEMA_ADDRESSES = Joi.array()
-    .items(SCHEMA_ADDRESS)
-    .min(1);
-const SCHEMA_STATUSES = Joi.array()
-    .items(schema.plugins.notifications.schemaStatus)
-    .min(0);
+const SCHEMA_ADDRESSES = Joi.array().items(SCHEMA_ADDRESS).min(1);
+const SCHEMA_STATUSES = Joi.array().items(schema.plugins.notifications.schemaStatus).min(0);
 const SCHEMA_EMAIL = Joi.alternatives().try(
     Joi.object().keys({ addresses: SCHEMA_ADDRESSES, statuses: SCHEMA_STATUSES }),
     SCHEMA_ADDRESS,
@@ -52,9 +48,7 @@ const SCHEMA_JOB_DATA = Joi.object().keys({
 });
 const SCHEMA_SMTP_CONFIG = Joi.object().keys({
     host: Joi.string().required(),
-    port: Joi.number()
-        .integer()
-        .required(),
+    port: Joi.number().integer().required(),
     from: SCHEMA_ADDRESS.required(),
     username: Joi.string(),
     password: Joi.string()
