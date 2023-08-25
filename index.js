@@ -113,7 +113,7 @@ function buildStatus(buildData, config) {
         return;
     }
 
-    const changedFiles = Hoek.reach(buildData, 'build.meta.commit.changedFiles', { default : "" }).split(',');
+    const changedFiles = Hoek.reach(buildData, 'build.meta.commit.changedFiles', { default: "" }).split(',');
 
     let changedFilesStr = '';
 
