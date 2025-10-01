@@ -137,9 +137,9 @@ function buildStatus(buildData, config) {
         `${Hoek.reach(buildData, 'pipeline.scmRepo.name')} ` +
         `${buildData.jobName} ${rootDir} #${Hoek.reach(buildData, 'build.id')}`;
     const message = `Build status: ${notificationStatus}\nBuild link:${buildData.buildLink}`;
-    const commitSha = Hoek.reach(buildData, 'build.meta.build.sha').slice(0, 7);
-    const commitMessage = Hoek.reach(buildData, 'build.meta.commit.message');
-    const commitLink = Hoek.reach(buildData, 'build.meta.commit.url');
+    const commitSha = Hoek.reach(buildData, 'event.sha', { default: '-' }).slice(0, 7);
+    const commitMessage = Hoek.reach(buildData, 'event.commit.message', { default: '-' });
+    const commitLink = Hoek.reach(buildData, 'event.commit.url', { default: '-' });
     const html = tinytim.renderFile(path.resolve(__dirname, './template/email.html'), {
         buildStatus: notificationStatus,
         buildLink: buildData.buildLink,
