@@ -8,6 +8,27 @@ const tinytim = require('tinytim');
 const path = require('path');
 const emailer = require('./email');
 
+/**
+ * Escapes HTML special characters to prevent XSS/HTML injection
+ * @param {String} text - Text to escape
+ * @return {String} - Escaped text safe for HTML
+ */
+function escapeHtml(text) {
+    if (typeof text !== 'string') {
+        return text;
+    }
+
+    const htmlEscapeMap = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#x27;'
+    };
+
+    return text.replace(/[&<>"']/g, char => htmlEscapeMap[char]);
+}
+
 // See also COLOR_MAP in Slack Notification.
 // https://github.com/screwdriver-cd/notifications-slack/blob/master/index.js#L10
 const COLOR_MAP = {
@@ -121,7 +142,7 @@ function buildStatus(buildData, config) {
         changedFiles.forEach(file => {
             const li = '<li>{{contents}}</li>';
 
-            changedFilesStr += tinytim.tim(li, { contents: file });
+            changedFilesStr += tinytim.tim(li, { contents: escapeHtml(file) });
         });
     } else {
         changedFilesStr = 'There are no changed files.';
@@ -146,7 +167,7 @@ function buildStatus(buildData, config) {
         buildId: buildData.build.id,
         changedFiles: changedFilesStr,
         commitSha,
-        commitMessage,
+        commitMessage: escapeHtml(commitMessage),
         commitLink,
         statusColor: COLOR_MAP[buildData.status]
     });
