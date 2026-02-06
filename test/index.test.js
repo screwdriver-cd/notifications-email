@@ -782,4 +782,192 @@ describe('index', () => {
             });
         });
     });
+
+    describe('Security - HTML Injection Prevention', () => {
+        beforeEach(() => {
+            sendMailMock.sendMail.reset();
+            nodemailerMock.createTransport.reset();
+            nodemailerMock.createTransport.returns(sendMailMock);
+
+            serverMock = new Hapi.Server();
+            configMock = {
+                host: 'testing.aserver.com',
+                port: 25,
+                from: 'user@email.com'
+            };
+
+            notifier = new EmailNotifier(configMock, serverMock, 'build_status');
+            eventMock = 'build_status';
+
+            // Common buildDataMock setup
+            buildDataMock = {
+                settings: {
+                    email: {
+                        addresses: ['notify.me@email.com'],
+                        statuses: ['FAILURE']
+                    }
+                },
+                status: 'FAILURE',
+                pipeline: {
+                    id: '123',
+                    scmRepo: {
+                        name: 'screwdriver-cd/notifications'
+                    }
+                },
+                jobName: 'publish',
+                build: {
+                    id: '1234',
+                    meta: {
+                        commit: {
+                            changedFiles: 'normal_file.js'
+                        }
+                    }
+                },
+                event: {
+                    id: '12345',
+                    commit: {
+                        message: 'Normal commit message',
+                        url: 'https://github.com/test/repo/commit/abc123'
+                    },
+                    sha: 'abc1234567890'
+                },
+                buildLink: 'http://thisisaSDtest.com/builds/1234',
+                isFixed: false
+            };
+        });
+
+        it('should escape HTML injection in commit message', done => {
+            buildDataMock.event.commit.message =
+                '<img src=x onerror="alert(\'XSS in commit message\')">Malicious commit';
+
+            serverMock.event(eventMock);
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
+            serverMock.events.emit(eventMock, buildDataMock);
+
+            process.nextTick(() => {
+                assert.calledOnce(sendMailMock.sendMail);
+
+                const emailHtml = sendMailMock.sendMail.getCall(0).args[0].html;
+
+                // Verify that the HTML injection attempt is escaped
+                assert.notInclude(
+                    emailHtml,
+                    '<img src=x onerror="alert(\'XSS in commit message\')">',
+                    'Raw HTML should be escaped'
+                );
+                assert.include(emailHtml, '&lt;img src=x onerror=', 'HTML should be escaped with entities');
+                done();
+            });
+        });
+
+        it('should escape script tags in commit message', done => {
+            buildDataMock.build.meta.commit.changedFiles = 'file.js';
+            buildDataMock.event.commit.message = '<script>alert("XSS")</script>Fix bug';
+
+            serverMock.event(eventMock);
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
+            serverMock.events.emit(eventMock, buildDataMock);
+
+            process.nextTick(() => {
+                const emailHtml = sendMailMock.sendMail.getCall(0).args[0].html;
+
+                // Verify that script tags are escaped
+                assert.notInclude(emailHtml, '<script>alert("XSS")</script>', 'Script tags should be escaped');
+                assert.include(emailHtml, '&lt;script&gt;', 'Script tag should be escaped with entities');
+                done();
+            });
+        });
+
+        it('should escape HTML in file names to prevent XSS', done => {
+            buildDataMock.build.meta.commit.changedFiles =
+                '<script>alert("XSS")</script>.js,<img src=x onerror=alert(1)>.txt';
+            buildDataMock.event.commit.message = 'Update files';
+
+            serverMock.event(eventMock);
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
+            serverMock.events.emit(eventMock, buildDataMock);
+
+            process.nextTick(() => {
+                const emailHtml = sendMailMock.sendMail.getCall(0).args[0].html;
+
+                // Verify that HTML in file names is escaped
+                assert.notInclude(
+                    emailHtml,
+                    '<script>alert("XSS")</script>.js',
+                    'Script tag in filename should be escaped'
+                );
+                assert.notInclude(emailHtml, '<img src=x onerror=alert(1)>', 'IMG tag in filename should be escaped');
+                assert.include(emailHtml, '&lt;script&gt;', 'File name HTML should be escaped');
+                done();
+            });
+        });
+
+        it('should escape multiple special characters', done => {
+            buildDataMock.settings.email.statuses = ['SUCCESS'];
+            buildDataMock.status = 'SUCCESS';
+            buildDataMock.build.meta.commit.changedFiles = 'file<test>.js';
+            buildDataMock.event.commit.message = 'Test <>&"\'/commit';
+
+            serverMock.event(eventMock);
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
+            serverMock.events.emit(eventMock, buildDataMock);
+
+            process.nextTick(() => {
+                const emailHtml = sendMailMock.sendMail.getCall(0).args[0].html;
+
+                // Verify that special characters are escaped
+                assert.include(emailHtml, '&lt;', 'Less than should be escaped');
+                assert.include(emailHtml, '&gt;', 'Greater than should be escaped');
+                assert.include(emailHtml, '&amp;', 'Ampersand should be escaped');
+                assert.include(emailHtml, '&quot;', 'Double quote should be escaped');
+                assert.include(emailHtml, '&#x27;', 'Single quote should be escaped');
+                done();
+            });
+        });
+
+        it('should escape both commit message and file names in combined attack', done => {
+            buildDataMock.build.meta.commit.changedFiles = '<iframe src="evil.com"></iframe>.js';
+            buildDataMock.event.commit.message = '<svg onload="alert(\'XSS\')">Malicious SVG commit';
+
+            serverMock.event(eventMock);
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
+            serverMock.events.emit(eventMock, buildDataMock);
+
+            process.nextTick(() => {
+                const emailHtml = sendMailMock.sendMail.getCall(0).args[0].html;
+
+                // Verify both attack vectors are escaped
+                assert.notInclude(emailHtml, '<iframe src="evil.com"></iframe>', 'iframe tag should be escaped');
+                assert.notInclude(emailHtml, '<svg onload="alert(\'XSS\')">', 'SVG tag should be escaped');
+                assert.include(emailHtml, '&lt;iframe', 'iframe should be HTML escaped');
+                assert.include(emailHtml, '&lt;svg', 'SVG should be HTML escaped');
+                done();
+            });
+        });
+
+        it('should preserve normal commit messages without HTML', done => {
+            buildDataMock.settings.email.statuses = ['SUCCESS'];
+            buildDataMock.status = 'SUCCESS';
+            buildDataMock.build.meta.commit.changedFiles = 'src/index.js,test/index.test.js';
+            buildDataMock.event.commit.message = 'Fix bug in authentication logic';
+
+            serverMock.event(eventMock);
+            serverMock.events.on(eventMock, data => notifier.notify(eventMock, data));
+            serverMock.events.emit(eventMock, buildDataMock);
+
+            process.nextTick(() => {
+                const emailHtml = sendMailMock.sendMail.getCall(0).args[0].html;
+
+                // Verify normal content is preserved
+                assert.include(
+                    emailHtml,
+                    'Fix bug in authentication logic',
+                    'Normal commit message should be included'
+                );
+                assert.include(emailHtml, 'src/index.js', 'Normal file names should be included');
+                assert.include(emailHtml, 'test/index.test.js', 'Normal file names should be included');
+                done();
+            });
+        });
+    });
 });
