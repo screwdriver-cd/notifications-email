@@ -45,8 +45,8 @@
   "dependencies": {
     "@hapi/hoek": "^11.0.7",
     "joi": "^17.13.3",
-    "nodemailer": "^9.0.1",
-    "screwdriver-data-schema": "^25.0.0",
+    "nodemailer": "^10.6.0",
+    "screwdriver-data-schema": "^26.0.0",
     "screwdriver-logger": "^3.0.0",
     "screwdriver-notifications-base": "^5.0.0",
     "tinytim": "^0.1.1"
